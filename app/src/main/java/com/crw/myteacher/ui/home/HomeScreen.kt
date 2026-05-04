@@ -50,12 +50,16 @@ private val MutedText = Color(0xFF6F7684)
 fun HomeRoute(
     uiState: HomeUiState,
     modifier: Modifier = Modifier,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onNavigateToProposeLesson: () -> Unit,
+    onNavigateToCalendar: () -> Unit
 ) {
     HomeScreen(
         uiState = uiState,
         modifier = modifier,
-        onRetry = onRetry
+        onRetry = onRetry,
+        onNavigateToProposeLesson = onNavigateToProposeLesson,
+        onNavigateToCalendar = onNavigateToCalendar
     )
 }
 
@@ -64,13 +68,17 @@ fun HomeRoute(
 fun HomeScreen(
     uiState: HomeUiState,
     modifier: Modifier = Modifier,
-    onRetry: () -> Unit = {}
+    onRetry: () -> Unit = {},
+    onNavigateToProposeLesson: () -> Unit = {},
+    onNavigateToCalendar: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = ScreenBackground,
         bottomBar = {
-            BottomBar()
+            BottomBar(
+                onCalendarClick = onNavigateToCalendar
+            )
         }
     ) { paddingValues ->
         if (uiState.isLoading) {
@@ -101,7 +109,7 @@ fun HomeScreen(
             }
             item { HeaderSection(data = uiState.data) }
             item { ProgressCard(data = uiState.data) }
-            item { QuickActionsSection(data = uiState.data) }
+            item { QuickActionsSection(data = uiState.data, onClick = onNavigateToProposeLesson) }
             item { LessonsSection(data = uiState.data) }
             item {
                 SubjectSection(subjects = uiState.data.subjects)
@@ -167,12 +175,13 @@ private fun ProgressCard(data: DashboardData) {
 }
 
 @Composable
-private fun QuickActionsSection(data: DashboardData) {
+private fun QuickActionsSection(data: DashboardData, onClick: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("Szybkie akcje", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF222833))
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             data.quickActions.forEach { action ->
                 Card(
+                    onClick = onClick,
                     colors = CardDefaults.cardColors(containerColor = CardGrey),
                     shape = RoundedCornerShape(18.dp),
                     modifier = Modifier.weight(1f)
@@ -302,7 +311,7 @@ private fun SubjectSection(subjects: List<Subject>) {
 }
 
 @Composable
-private fun BottomBar() {
+private fun BottomBar(onCalendarClick: () -> Unit = {}) {
     Card(
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -314,27 +323,31 @@ private fun BottomBar() {
                 .padding(horizontal = 18.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            BottomBarItem("START", "H", selected = true)
-            BottomBarItem("KALENDARZ", "K", selected = false)
-            BottomBarItem("WIADOMOSCI", "W", selected = false)
-            BottomBarItem("PROFIL", "P", selected = false)
+            BottomBarItem("START", "H", selected = true, onClick = {})
+            BottomBarItem("KALENDARZ", "K", selected = false, onClick = onCalendarClick)
+            BottomBarItem("WIADOMOSCI", "W", selected = false, onClick = {})
+            BottomBarItem("PROFIL", "P", selected = false, onClick = {})
         }
     }
 }
 
 @Composable
-private fun BottomBarItem(label: String, iconLabel: String, selected: Boolean) {
+private fun BottomBarItem(label: String, iconLabel: String, selected: Boolean, onClick: () -> Unit = {}) {
     val textColor = if (selected) BrandBlue else Color(0xFF8B98B4)
     val background = if (selected) Color(0xFFE9EDF4) else Color.Transparent
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = background),
+        shape = RoundedCornerShape(18.dp),
         modifier = Modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(background)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Text(iconLabel, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text(label, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            Text(iconLabel, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(label, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 
@@ -361,5 +374,3 @@ private fun ErrorBanner(message: String, onRetry: () -> Unit) {
         }
     }
 }
-
-
