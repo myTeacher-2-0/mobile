@@ -12,9 +12,8 @@ class DashboardDataTest {
         val data = FakeDashboardData.create()
 
         assertTrue(data.quickActions.isNotEmpty())
-        assertTrue(data.todaysLessons.isNotEmpty())
-        assertTrue(data.subjects.isNotEmpty())
-        assertEquals(80, data.progressPercent)
+        assertEquals(3, data.quickActions.size)
+        assertEquals("Użytkowniku", data.greetingName)
+        assertEquals(0, data.progressPercent)
     }
 }
-

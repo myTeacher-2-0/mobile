@@ -1,20 +1,23 @@
 package com.crw.myteacher.ui.calendar
 
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,23 +35,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.Image
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.crw.myteacher.R
+import com.crw.myteacher.data.model.CalendarMeeting
 import com.crw.myteacher.data.model.LessonActionType
-import com.crw.myteacher.data.model.MockLesson
 import com.crw.myteacher.ui.theme.BrandBlue
 import com.crw.myteacher.ui.theme.DarkText
 import com.crw.myteacher.ui.theme.LightCardBg
 import com.crw.myteacher.ui.theme.MutedText
 import com.crw.myteacher.ui.theme.ScreenBackground
-import androidx.compose.ui.platform.LocalContext
-import android.widget.Toast
-
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.YearMonth
 
 fun Int.lessonCountLabel(): String = when (this) {
     1 -> "1 lekcja"
@@ -59,24 +62,30 @@ fun Int.lessonCountLabel(): String = when (this) {
 @Composable
 fun CalendarRoute(
     uiState: CalendarUiState,
-    onDateSelected: (String) -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onNavigateBack: () -> Unit,
-    onProposeLessonClick: () -> Unit
+    onProposeLessonClick: () -> Unit,
+    onPreviousMonth: () -> Unit = {},
+    onNextMonth: () -> Unit = {}
 ) {
     CalendarScreenContent(
         uiState = uiState,
         onDateSelected = onDateSelected,
         onNavigateBack = onNavigateBack,
-        onProposeLessonClick = onProposeLessonClick
+        onProposeLessonClick = onProposeLessonClick,
+        onPreviousMonth = onPreviousMonth,
+        onNextMonth = onNextMonth
     )
 }
 
 @Composable
 fun CalendarScreenContent(
     uiState: CalendarUiState,
-    onDateSelected: (String) -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onNavigateBack: () -> Unit,
-    onProposeLessonClick: () -> Unit
+    onProposeLessonClick: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -92,7 +101,6 @@ fun CalendarScreenContent(
             }
         },
         bottomBar = {
-            // Simplified BottomBar directly here or could be moved
             BottomBarPlaceholder(onNavigateBack)
         }
     ) { paddingValues ->
@@ -125,9 +133,28 @@ fun CalendarScreenContent(
                 )
             }
 
-            // Calendar mock
+            // Error message
+            if (uiState.errorMessage != null) {
+                item {
+                    Text(
+                        text = uiState.errorMessage,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // Calendar grid
             item {
-                CalendarGrid(selectedDate = uiState.selectedDate, onDateSelected = onDateSelected)
+                CalendarGrid(
+                    currentMonth = uiState.currentMonth,
+                    selectedDate = uiState.selectedDate,
+                    onDateSelected = onDateSelected,
+                    onPreviousMonth = onPreviousMonth,
+                    onNextMonth = onNextMonth
+                )
             }
 
             item {
@@ -136,13 +163,13 @@ fun CalendarScreenContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    Text("Dzisiejsze Lekcje", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("Lekcje", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = BrandBlue.copy(alpha = 0.15f))
                     ) {
                         Text(
-                            text = uiState.lessons.size.lessonCountLabel(),
+                            text = uiState.meetings.size.lessonCountLabel(),
                             color = BrandBlue,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
@@ -153,9 +180,21 @@ fun CalendarScreenContent(
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    uiState.lessons.forEach { lesson ->
-                        MockLessonCard(lesson)
+                if (uiState.meetings.isEmpty()) {
+                    Text(
+                        text = "Brak spotkań",
+                        color = MutedText,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        uiState.meetings.forEach { meeting ->
+                            MeetingCard(meeting)
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -165,20 +204,48 @@ fun CalendarScreenContent(
 }
 
 @Composable
-fun CalendarGrid(selectedDate: String, onDateSelected: (String) -> Unit) {
+fun CalendarGrid(
+    currentMonth: YearMonth,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Month header with navigation
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Wrzesień 2024", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = BrandBlue)
+            Text(
+                text = currentMonth.let {
+                    val formatter = java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy", java.util.Locale("pl"))
+                    it.format(formatter).replaceFirstChar { c -> c.titlecase(java.util.Locale("pl")) }
+                },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = BrandBlue
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("<", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = BrandBlue)
-                Text(">", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = BrandBlue)
+                Text(
+                    "<",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BrandBlue,
+                    modifier = Modifier.clickable { onPreviousMonth() }
+                )
+                Text(
+                    ">",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BrandBlue,
+                    modifier = Modifier.clickable { onNextMonth() }
+                )
             }
         }
 
+        // Day of week headers
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("PON", "WT", "ŚR", "CZW", "PT", "SOB", "NDZ").forEach { day ->
                 Text(
@@ -192,15 +259,35 @@ fun CalendarGrid(selectedDate: String, onDateSelected: (String) -> Unit) {
             }
         }
 
-        val days = (1..30).toList()
-        for (week in 0..4) {
+        // Calculate days in the grid
+        val firstDayOfMonth = currentMonth.atDay(1)
+        val daysInMonth = currentMonth.lengthOfMonth()
+        // Monday=1 .. Sunday=7 => offset 0..6
+        val startOffset = (firstDayOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value)
+        val totalCells = startOffset + daysInMonth
+        val weeks = (totalCells + 6) / 7
+        val today = LocalDate.now()
+
+        for (week in 0 until weeks) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 for (d in 0..6) {
-                    val index = week * 7 + d
-                    val dayStr = if (index < days.size) days[index].toString() else ""
-                    val isSelected = selectedDate == dayStr
-                    val bgColor = if (isSelected) BrandBlue else Color.Transparent
-                    val textColor = if (isSelected) Color.White else DarkText
+                    val cellIndex = week * 7 + d
+                    val dayNum = cellIndex - startOffset + 1
+                    val isValidDay = dayNum in 1..daysInMonth
+                    val date = if (isValidDay) currentMonth.atDay(dayNum) else null
+                    val isSelected = date == selectedDate
+                    val isToday = date == today
+
+                    val bgColor = when {
+                        isSelected -> BrandBlue
+                        isToday -> BrandBlue.copy(alpha = 0.15f)
+                        else -> Color.Transparent
+                    }
+                    val textColor = when {
+                        isSelected -> Color.White
+                        isToday -> BrandBlue
+                        else -> DarkText
+                    }
 
                     Box(
                         modifier = Modifier
@@ -208,14 +295,14 @@ fun CalendarGrid(selectedDate: String, onDateSelected: (String) -> Unit) {
                             .padding(4.dp)
                             .clip(CircleShape)
                             .background(bgColor)
-                            .clickable(enabled = dayStr.isNotEmpty()) {
-                                if (dayStr.isNotEmpty()) onDateSelected(dayStr)
+                            .clickable(enabled = isValidDay) {
+                                date?.let { onDateSelected(it) }
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (dayStr.isNotEmpty()) {
+                        if (isValidDay) {
                             Text(
-                                text = dayStr,
+                                text = dayNum.toString(),
                                 color = textColor,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -229,18 +316,30 @@ fun CalendarGrid(selectedDate: String, onDateSelected: (String) -> Unit) {
 }
 
 @Composable
-fun MockLessonCard(lesson: MockLesson) {
+fun MeetingCard(meeting: CalendarMeeting) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = LightCardBg),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-            Box(modifier = Modifier.width(4.dp).fillMaxHeight().background(BrandBlue))
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)) {
+            Box(modifier = Modifier
+                .width(4.dp)
+                .fillMaxHeight()
+                .background(BrandBlue))
 
-            Column(modifier = Modifier.padding(start = 14.dp, end = 18.dp, top = 18.dp, bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                // Górna sekcja (Avatar + Przedmiot + Tytuł)
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.padding(start = 14.dp, end = 18.dp, top = 18.dp, bottom = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Top section (Avatar + Subject + Title)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_avatar_placeholder),
                         contentDescription = null,
@@ -251,39 +350,71 @@ fun MockLessonCard(lesson: MockLesson) {
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = lesson.subject.uppercase(),
+                            text = meeting.subject.uppercase(),
                             color = BrandBlue,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(lesson.title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkText)
+                        Text(
+                            meeting.title,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkText
+                        )
                     }
                 }
 
-                // Środkowa sekcja (Zegar + Czas)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Z", color = MutedText, fontWeight = FontWeight.Bold, fontSize = 16.sp) // zegar
-                    Text("${lesson.timeRange} (${lesson.durationMin} min)", fontSize = 14.sp, color = MutedText)
+                // Middle section (Time)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("🕐", fontSize = 16.sp)
+                    Text(
+                        "${meeting.timeRange} (${meeting.durationMin} min)",
+                        fontSize = 14.sp,
+                        color = MutedText
+                    )
                 }
 
-                // Dolna sekcja (Role + Name, Button)
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                // Bottom section (Teacher + Action button)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Column {
-                        Text(lesson.teacherRole, color = BrandBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        Text(lesson.teacherName, color = DarkText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            meeting.status.lowercase()
+                                .replaceFirstChar { it.titlecase(java.util.Locale("pl")) },
+                            color = BrandBlue,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            meeting.teacherName,
+                            color = DarkText,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
-                    val isJoin = lesson.actionType == LessonActionType.JOIN
+                    val isJoin = meeting.actionType == LessonActionType.JOIN
                     val btnColor = if (isJoin) BrandBlue else Color.Transparent
                     val textColor = if (isJoin) Color.White else BrandBlue
 
                     Button(
                         onClick = {},
                         colors = ButtonDefaults.buttonColors(containerColor = btnColor),
-                        border = if (!isJoin) androidx.compose.foundation.BorderStroke(1.dp, BrandBlue) else null,
+                        border = if (!isJoin) BorderStroke(1.dp, BrandBlue) else null,
                         shape = RoundedCornerShape(24.dp)
                     ) {
-                        Text(if (isJoin) "DOŁĄCZ" else "SZCZEGÓŁY", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textColor)
+                        Text(
+                            if (isJoin) "DOŁĄCZ" else "SZCZEGÓŁY",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = textColor
+                        )
                     }
                 }
             }
@@ -307,14 +438,19 @@ private fun BottomBarPlaceholder(onNavigateBack: () -> Unit) {
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable { onNavigateBack() }.padding(horizontal = 12.dp, vertical = 8.dp)
+                modifier = Modifier
+                    .clickable { onNavigateBack() }
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text("H", color = Color(0xFF8B98B4), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text("START", color = Color(0xFF8B98B4), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color(0xFFE9EDF4)).padding(horizontal = 12.dp, vertical = 8.dp)
+                modifier = Modifier
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color(0xFFE9EDF4))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text("K", color = BrandBlue, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text("KALENDARZ", color = BrandBlue, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)

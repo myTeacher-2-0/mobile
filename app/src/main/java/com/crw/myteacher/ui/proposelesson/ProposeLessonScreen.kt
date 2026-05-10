@@ -113,14 +113,17 @@ fun ProposeLessonScreenContent(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column {
                         Text("Wybierz datę", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                        Text("Wrzesień 2024", fontSize = 14.sp, color = MutedText, fontWeight = FontWeight.SemiBold)
+                        val now = java.time.LocalDate.now()
+                        val monthLabel = now.format(java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy", Locale("pl")))
+                            .replaceFirstChar { it.titlecase(Locale("pl")) }
+                        Text(monthLabel, fontSize = 14.sp, color = MutedText, fontWeight = FontWeight.SemiBold)
                     }
                     Text("Zobacz kalendarz", color = BrandBlue, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
             item {
-                DateSelector(uiState.selectedDateIndex, onDateSelected)
+                DateSelector(uiState.dates, uiState.selectedDateIndex, onDateSelected)
             }
 
             item {
@@ -212,8 +215,7 @@ fun TeacherCard(teacher: MockTeacher) {
 }
 
 @Composable
-fun DateSelector(selectedIndex: Int, onSelected: (Int) -> Unit) {
-    val days = listOf("MON" to "11", "TUE" to "12", "WED" to "13", "THU" to "14", "FRI" to "15", "SAT" to "16", "SUN" to "17")
+fun DateSelector(days: List<Pair<String, String>>, selectedIndex: Int, onSelected: (Int) -> Unit) {
     LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         itemsIndexed(days) { index, (day, num) ->
             val isSelected = index == selectedIndex

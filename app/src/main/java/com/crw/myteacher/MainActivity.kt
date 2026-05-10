@@ -5,12 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.crw.myteacher.data.remote.ApiClient
 import com.crw.myteacher.ui.calendar.CalendarRoute
 import com.crw.myteacher.ui.calendar.CalendarViewModel
 import com.crw.myteacher.ui.home.HomeRoute
@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ApiClient.init(this)
         enableEdgeToEdge()
         setContent {
             val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
@@ -60,7 +61,9 @@ class MainActivity : ComponentActivity() {
                             uiState = calendarState,
                             onDateSelected = calendarViewModel::selectDate,
                             onNavigateBack = { navController.popBackStack() },
-                            onProposeLessonClick = { navController.navigate(ProposeLesson) }
+                            onProposeLessonClick = { navController.navigate(ProposeLesson) },
+                            onPreviousMonth = calendarViewModel::previousMonth,
+                            onNextMonth = calendarViewModel::nextMonth
                         )
                     }
                     composable<ProposeLesson> {
