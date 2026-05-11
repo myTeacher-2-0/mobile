@@ -15,11 +15,16 @@ import com.crw.myteacher.ui.calendar.CalendarRoute
 import com.crw.myteacher.ui.calendar.CalendarViewModel
 import com.crw.myteacher.ui.home.HomeRoute
 import com.crw.myteacher.ui.home.HomeViewModel
+import com.crw.myteacher.ui.login.LoginRoute
+import com.crw.myteacher.ui.login.LoginViewModel
 import com.crw.myteacher.ui.proposelesson.ProposeLessonRoute
 import com.crw.myteacher.ui.proposelesson.ProposeLessonViewModel
 import com.crw.myteacher.ui.theme.MyTeacherTheme
 import kotlinx.serialization.Serializable
 
+
+@Serializable
+object Login
 
 @Serializable
 object Home
@@ -41,11 +46,31 @@ class MainActivity : ComponentActivity() {
             val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
             MyTeacherTheme(dynamicColor = false) {
                 val navController = rememberNavController()
+                val isLoggedIn = ApiClient.getTokenManager().isLoggedIn
+                val startDestination: Any = if (isLoggedIn) Home else Login
 
                 NavHost(
                     navController = navController,
-                    startDestination = Home
+                    startDestination = startDestination
                 ) {
+                    composable<Login> {
+                        val loginViewModel: LoginViewModel by viewModels { LoginViewModel.factory() }
+                        val loginState by loginViewModel.uiState.collectAsStateWithLifecycle()
+                        LoginRoute(
+                            uiState = loginState,
+                            onEmailChange = loginViewModel::onEmailChange,
+                            onPasswordChange = loginViewModel::onPasswordChange,
+                            onTogglePasswordVisibility = loginViewModel::togglePasswordVisibility,
+                            onLogin = loginViewModel::login,
+                            onNavigateToRegister = { /* TODO: navigate to register */ },
+                            onLoginSuccess = {
+                                homeViewModel.loadDashboard()
+                                navController.navigate(Home) {
+                                    popUpTo(Login) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
                     composable<Home> {
                         HomeRoute(
                             uiState = uiState,
