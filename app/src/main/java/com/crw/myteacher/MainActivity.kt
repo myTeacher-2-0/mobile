@@ -19,9 +19,13 @@ import com.crw.myteacher.ui.login.LoginRoute
 import com.crw.myteacher.ui.login.LoginViewModel
 import com.crw.myteacher.ui.proposelesson.ProposeLessonRoute
 import com.crw.myteacher.ui.proposelesson.ProposeLessonViewModel
+import com.crw.myteacher.ui.splash.SplashScreen
 import com.crw.myteacher.ui.theme.MyTeacherTheme
 import kotlinx.serialization.Serializable
 
+
+@Serializable
+object Splash
 
 @Serializable
 object Login
@@ -46,13 +50,21 @@ class MainActivity : ComponentActivity() {
             val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
             MyTeacherTheme(dynamicColor = false) {
                 val navController = rememberNavController()
-                val isLoggedIn = ApiClient.getTokenManager().isLoggedIn
-                val startDestination: Any = if (isLoggedIn) Home else Login
-
                 NavHost(
                     navController = navController,
-                    startDestination = startDestination
+                    startDestination = Splash
                 ) {
+                    composable<Splash> {
+                        SplashScreen(
+                            onSplashFinished = {
+                                val isLoggedIn = ApiClient.getTokenManager().isLoggedIn
+                                val destination: Any = if (isLoggedIn) Home else Login
+                                navController.navigate(destination) {
+                                    popUpTo(Splash) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
                     composable<Login> {
                         val loginViewModel: LoginViewModel by viewModels { LoginViewModel.factory() }
                         val loginState by loginViewModel.uiState.collectAsStateWithLifecycle()
