@@ -19,6 +19,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "API_BASE_URL", "\"https://myteacher.pl/\"")
+        buildConfigField("String", "RECAPTCHA_SITE_KEY", "\"6LeIkp4sAAAAAJs9SEtFFimbIjrGRoA88eMKJBRP\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -59,6 +60,7 @@ dependencies {
     implementation(libs.retrofit.kotlinx.serialization.converter)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.google.recaptcha)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

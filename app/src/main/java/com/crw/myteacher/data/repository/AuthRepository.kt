@@ -7,24 +7,16 @@ import com.crw.myteacher.data.remote.dto.RegisterRequestDto
 
 class AuthRepository(private val api: MyTeacherApi) : BaseRepository() {
 
-    suspend fun register(request: RegisterRequestDto): Result<AuthResponseDto> {
-        return safeApiCall { api.register(request) }
+    suspend fun register(request: RegisterRequestDto, recaptchaToken: String): Result<AuthResponseDto> {
+        return safeApiCall { api.register(request, recaptchaToken) }
     }
 
-    suspend fun login(request: LoginRequestDto): Result<AuthResponseDto> {
-        return safeApiCall { api.login(request) }
+    suspend fun login(request: LoginRequestDto, recaptchaToken: String): Result<AuthResponseDto> {
+        return safeApiCall { api.login(request, recaptchaToken) }
     }
 
-    suspend fun login(email: String, password: String): Result<AuthResponseDto> {
-        return login(LoginRequestDto(email = email, password = password))
-    }
-
-    suspend fun refreshToken(refreshToken: String): Result<AuthResponseDto> {
-        return safeApiCall { api.refreshToken(refreshToken) }
-    }
-
-    suspend fun logout(): Result<Unit> {
-        return safeApiCall { api.logout() }
+    suspend fun login(email: String, password: String, recaptchaToken: String): Result<AuthResponseDto> {
+        return login(LoginRequestDto(email = email, password = password), recaptchaToken)
     }
 }
 

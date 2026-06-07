@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,17 +16,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -60,7 +62,6 @@ fun LoginRoute(
     onPasswordChange: (String) -> Unit,
     onTogglePasswordVisibility: () -> Unit,
     onLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit,
     onLoginSuccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -76,7 +77,6 @@ fun LoginRoute(
         onPasswordChange = onPasswordChange,
         onTogglePasswordVisibility = onTogglePasswordVisibility,
         onLogin = onLogin,
-        onNavigateToRegister = onNavigateToRegister,
         modifier = modifier
     )
 }
@@ -88,7 +88,6 @@ fun LoginScreen(
     onPasswordChange: (String) -> Unit,
     onTogglePasswordVisibility: () -> Unit,
     onLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
@@ -104,7 +103,6 @@ fun LoginScreen(
                 .verticalScroll(rememberScrollState())
                 .imePadding()
         ) {
-            // ── Header gradient ──────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -134,7 +132,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ── Login form card ──────────────────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -155,7 +152,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Error message
                 if (uiState.errorMessage != null) {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEB)),
@@ -166,14 +162,13 @@ fun LoginScreen(
                             text = uiState.errorMessage,
                             color = ErrorRed,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                 }
 
-                // Email field
                 Text(
                     text = "Adres e-mail",
                     fontSize = 13.sp,
@@ -197,7 +192,9 @@ fun LoginScreen(
                         unfocusedContainerColor = InputBackground,
                         focusedBorderColor = BrandBlue,
                         unfocusedBorderColor = InputBorder,
-                        cursorColor = BrandBlue
+                        cursorColor = BrandBlue,
+                        focusedTextColor = DarkText,
+                        unfocusedTextColor = DarkText
                     ),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -205,7 +202,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Password field
                 Text(
                     text = "Hasło",
                     fontSize = 13.sp,
@@ -231,9 +227,11 @@ fun LoginScreen(
                     ),
                     trailingIcon = {
                         IconButton(onClick = onTogglePasswordVisibility) {
-                            Text(
-                                text = if (uiState.isPasswordVisible) "🙈" else "👁",
-                                fontSize = 18.sp
+                            Icon(
+                                imageVector = if (uiState.isPasswordVisible)
+                                    Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                contentDescription = if (uiState.isPasswordVisible)
+                                    "Ukryj hasło" else "Pokaż hasło"
                             )
                         }
                     },
@@ -242,7 +240,9 @@ fun LoginScreen(
                         unfocusedContainerColor = InputBackground,
                         focusedBorderColor = BrandBlue,
                         unfocusedBorderColor = InputBorder,
-                        cursorColor = BrandBlue
+                        cursorColor = BrandBlue,
+                        focusedTextColor = DarkText,
+                        unfocusedTextColor = DarkText
                     ),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -250,13 +250,13 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Login button
                 Button(
                     onClick = onLogin,
                     enabled = !uiState.isLoading,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BrandBlue,
-                        disabledContainerColor = Color(0xFFD6D9DE)
+                        disabledContainerColor = Color(0xFFD6D9DE),
+                        contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
@@ -277,31 +277,6 @@ fun LoginScreen(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Register link
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Nie masz jeszcze konta?",
-                        color = MutedText,
-                        fontSize = 14.sp
-                    )
-                    TextButton(onClick = onNavigateToRegister) {
-                        Text(
-                            text = "Zarejestruj się",
-                            color = BrandBlue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }

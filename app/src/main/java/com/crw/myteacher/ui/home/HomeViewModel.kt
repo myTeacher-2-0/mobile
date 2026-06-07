@@ -6,8 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.crw.myteacher.data.model.DashboardData
 import com.crw.myteacher.data.remote.ApiClient
 import com.crw.myteacher.data.repository.DashboardRepository
-import com.crw.myteacher.data.repository.FakeDashboardData
 import com.crw.myteacher.data.repository.NetworkDashboardRepository
+import com.crw.myteacher.data.repository.AccountRepository
+import com.crw.myteacher.data.repository.MeetingRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,16 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val isLoading: Boolean = true,
-    val data: DashboardData = FakeDashboardData.create(),
+    val data: DashboardData = DashboardData(
+        dateLabel = "",
+        greetingName = "",
+        progressPercent = 0,
+        completedLabel = "",
+        remainingMeetingsLabel = "",
+        quickActions = emptyList(),
+        todaysLessons = emptyList(),
+        subjects = emptyList()
+    ),
     val errorMessage: String? = null
 )
 
@@ -37,10 +47,20 @@ class HomeViewModel(
                 val dashboard = repository.getDashboard()
                 HomeUiState(isLoading = false, data = dashboard)
             } catch (_: Exception) {
+                val emptyData = DashboardData(
+                    dateLabel = "",
+                    greetingName = "",
+                    progressPercent = 0,
+                    completedLabel = "",
+                    remainingMeetingsLabel = "",
+                    quickActions = emptyList(),
+                    todaysLessons = emptyList(),
+                    subjects = emptyList()
+                )
                 HomeUiState(
                     isLoading = false,
-                    data = FakeDashboardData.create(),
-                    errorMessage = "Nie udalo sie pobrac danych. Pokazujemy dane lokalne."
+                    data = emptyData,
+                    errorMessage = "Nie udalo sie pobrac danych. Pokazujemy puste."
                 )
             }
         }
@@ -51,11 +71,12 @@ class HomeViewModel(
             return object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    val repository = NetworkDashboardRepository(ApiClient.api)
+                    val accRepo = AccountRepository(ApiClient.api)
+                    val meetRepo = MeetingRepository(ApiClient.api)
+                    val repository = NetworkDashboardRepository(accRepo, meetRepo)
                     return HomeViewModel(repository) as T
                 }
             }
         }
     }
 }
-

@@ -17,8 +17,6 @@ import com.crw.myteacher.ui.home.HomeRoute
 import com.crw.myteacher.ui.home.HomeViewModel
 import com.crw.myteacher.ui.login.LoginRoute
 import com.crw.myteacher.ui.login.LoginViewModel
-import com.crw.myteacher.ui.proposelesson.ProposeLessonRoute
-import com.crw.myteacher.ui.proposelesson.ProposeLessonViewModel
 import com.crw.myteacher.ui.splash.SplashScreen
 import com.crw.myteacher.ui.theme.MyTeacherTheme
 import kotlinx.serialization.Serializable
@@ -74,7 +72,6 @@ class MainActivity : ComponentActivity() {
                             onPasswordChange = loginViewModel::onPasswordChange,
                             onTogglePasswordVisibility = loginViewModel::togglePasswordVisibility,
                             onLogin = loginViewModel::login,
-                            onNavigateToRegister = { /* TODO: navigate to register */ },
                             onLoginSuccess = {
                                 homeViewModel.loadDashboard()
                                 navController.navigate(Home) {
@@ -101,17 +98,6 @@ class MainActivity : ComponentActivity() {
                             onProposeLessonClick = { navController.navigate(ProposeLesson) },
                             onPreviousMonth = calendarViewModel::previousMonth,
                             onNextMonth = calendarViewModel::nextMonth
-                        )
-                    }
-                    composable<ProposeLesson> {
-                        val proposeLessonViewModel: ProposeLessonViewModel by viewModels { ProposeLessonViewModel.factory() }
-                        val proposeLessonState by proposeLessonViewModel.uiState.collectAsStateWithLifecycle()
-                        ProposeLessonRoute(
-                            uiState = proposeLessonState,
-                            onNavigateBack = { navController.popBackStack() },
-                            onDateSelected = proposeLessonViewModel::selectDate,
-                            onSlotSelected = proposeLessonViewModel::selectSlot,
-                            onSubmit = proposeLessonViewModel::submitProposal
                         )
                     }
                 }

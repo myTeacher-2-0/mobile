@@ -18,7 +18,11 @@ abstract class BaseRepository {
                     Result.success(Unit as T)
                 }
             } else {
-                Result.failure(ApiException(response.code(), response.message()))
+                val errorBody = response.errorBody()?.string()
+                val msg = errorBody?.takeIf { it.isNotBlank() }
+                    ?: response.message().takeIf { it.isNotBlank() }
+                    ?: "HTTP ${response.code()}"
+                Result.failure(ApiException(response.code(), msg))
             }
         } catch (e: Exception) {
             Result.failure(e)

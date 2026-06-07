@@ -6,23 +6,23 @@ import com.crw.myteacher.data.remote.dto.MeetingListResponseDto
 
 class MeetingRepository(private val api: MyTeacherApi) : BaseRepository() {
 
-    suspend fun getMeetings(
-        page: Int = 0,
-        size: Int = 20,
-        status: String? = null
-    ): Result<MeetingListResponseDto> {
-        return safeApiCall { api.getMeetings(page = page, size = size, status = status) }
+    suspend fun getMyMeetings(): Result<MeetingListResponseDto> {
+        return safeApiCall { api.getMyMeetings() }
     }
 
-    suspend fun getMeetingsList(
-        page: Int = 0,
-        size: Int = 20,
-        status: String? = null
-    ): Result<List<MeetingDto>> {
-        return getMeetings(page, size, status).map { it.content }
+    suspend fun confirmMeeting(meetingId: Long): Result<MeetingDto> {
+        return safeApiCall { api.confirmMeeting(meetingId) }
+    }
+
+    suspend fun cancelMeeting(meetingId: Long): Result<MeetingDto> {
+        return safeApiCall { api.cancelMeeting(meetingId) }
     }
 
     suspend fun getMeetingById(meetingId: Long): Result<MeetingDto> {
         return safeApiCall { api.getMeetingById(meetingId) }
+    }
+
+    suspend fun getFutureMeetingsByOwner(ownerId: Long): Result<MeetingListResponseDto> {
+        return safeApiCall { api.getFutureMeetingsByOwner(ownerId) }
     }
 }

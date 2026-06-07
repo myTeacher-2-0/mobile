@@ -4,39 +4,32 @@ import com.crw.myteacher.data.model.DashboardData
 import com.crw.myteacher.data.model.Lesson
 import com.crw.myteacher.data.model.LessonStatus
 import com.crw.myteacher.data.model.QuickAction
-import com.crw.myteacher.data.model.Subject
-import com.crw.myteacher.data.remote.MyTeacherApi
+import com.crw.myteacher.data.remote.dto.MeetingDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class NetworkDashboardRepository(
-    private val api: MyTeacherApi
+    private val accountRepository: AccountRepository,
+    private val meetingRepository: MeetingRepository
 ) : DashboardRepository {
 
     override suspend fun getDashboard(): DashboardData {
-        val userResponse = api.getCurrentUser()
-        val meetingsResponse = api.getMeetings(page = 0, size = 10)
+        val userResult = accountRepository.getCurrentUser().getOrNull()
+        val meetingsResult = meetingRepository.getMyMeetings().getOrNull()
 
-        val userName = if (userResponse.isSuccessful) {
-            userResponse.body()?.firstName ?: "Użytkowniku"
-        } else {
-            "Użytkowniku"
-        }
-
-        val meetings = if (meetingsResponse.isSuccessful) {
-            meetingsResponse.body()?.content ?: emptyList()
-        } else {
-            emptyList()
-        }
+        val userName = userResult?.firstName ?: "Użytkowniku"
+        val meetings: List<MeetingDto> = meetingsResult?.content ?: emptyList()
 
         val today = LocalDate.now()
-        val dateFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale("pl"))
-        val dateLabel = today.format(dateFormatter)
-            .replaceFirstChar { it.titlecase(Locale("pl")) }
+        val dateFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())
+        val dateLabel = today.format(dateFormatter).let { s ->
+            if (s.isNotEmpty()) s.replaceFirstChar { it.uppercase() } else s
+        }
 
-        val todayMeetings = meetings.filter { dto ->
+        val todayMeetings: List<MeetingDto> = meetings.filter { dto: MeetingDto ->
+            if (dto.startTime.isBlank()) return@filter false
             try {
                 val start = LocalDateTime.parse(dto.startTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                 start.toLocalDate() == today
@@ -52,7 +45,7 @@ class NetworkDashboardRepository(
         val progressPercent = if (totalCount > 0) (completedCount * 100) / totalCount else 0
         val remainingCount = totalCount - completedCount
 
-        val todaysLessons = todayMeetings.map { dto ->
+        val todaysLessons = todayMeetings.map { dto: MeetingDto ->
             val timeRange = try {
                 val start = LocalDateTime.parse(dto.startTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                 val end = LocalDateTime.parse(dto.endTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -95,4 +88,3 @@ class NetworkDashboardRepository(
         )
     }
 }
-
