@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.crw.myteacher.data.remote.ApiClient
 import com.crw.myteacher.data.remote.TokenManager
+import com.crw.myteacher.data.remote.dto.UserDto
+import com.crw.myteacher.data.repository.AccountRepository
 import com.crw.myteacher.data.repository.ApiException
 import com.crw.myteacher.data.repository.AuthRepository
 import com.crw.myteacher.utils.MyTeacherApplication
@@ -21,11 +23,13 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isLoginSuccessful: Boolean = false,
-    val isPasswordVisible: Boolean = false
+    val isPasswordVisible: Boolean = false,
+    val loggedInUser: UserDto? = null
 )
 
 class LoginViewModel(
     private val authRepository: AuthRepository,
+    private val accountRepository: AccountRepository,
     private val tokenManager: TokenManager
 ) : ViewModel() {
 
@@ -44,6 +48,10 @@ class LoginViewModel(
         _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
     }
 
+    fun resetLoginSuccess() {
+        _uiState.value = _uiState.value.copy(isLoginSuccessful = false, loggedInUser = null)
+    }
+
     fun login() {
         val state = _uiState.value
 
@@ -56,24 +64,54 @@ class LoginViewModel(
             return
         }
 
+        Log.d(TAG, "┌─── LOGIN PROCESS STARTED ───")
+        Log.d(TAG, "│ Email: ${state.email.trim()}")
+        Log.d(TAG, "│ Step 1: Requesting reCAPTCHA token...")
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
             MyTeacherApplication.instance.executeRecaptcha(RecaptchaAction.LOGIN)
                 .addOnSuccessListener { recaptchaToken ->
+                    Log.d(TAG, "│ Step 2: reCAPTCHA token received (${recaptchaToken.take(20)}...)")
+                    Log.d(TAG, "│ Step 3: Calling /api/auth/login...")
+
                     viewModelScope.launch {
                         authRepository.login(state.email.trim(), state.password, recaptchaToken)
                             .onSuccess { authResponse ->
-                                Log.d(TAG, "Login successful: $authResponse")
+                                Log.d(TAG, "│ Step 4: Login API returned SUCCESS")
+                                Log.d(TAG, "│   accessToken: ${authResponse.accessToken.take(20)}...")
+                                Log.d(TAG, "│   refreshToken: ${authResponse.refreshToken?.take(20) ?: "null"}...")
+
                                 tokenManager.accessToken = authResponse.accessToken
                                 tokenManager.refreshToken = authResponse.refreshToken
-                                _uiState.value = _uiState.value.copy(
-                                    isLoading = false,
-                                    isLoginSuccessful = true
-                                )
+                                Log.d(TAG, "│ Step 5: Tokens saved to TokenManager")
+
+                                // Pobierz dane usera — JEDYNE zapytanie do account/me
+                                Log.d(TAG, "│ Step 6: Fetching /api/accounts/me (single call)...")
+                                val userResult = accountRepository.getCurrentUser()
+                                userResult
+                                    .onSuccess { user ->
+                                        Log.d(TAG, "│ Step 7: User data received: ${user.firstName} (id=${user.accountId})")
+                                        Log.d(TAG, "└─── LOGIN PROCESS COMPLETED SUCCESSFULLY ───")
+                                        _uiState.value = _uiState.value.copy(
+                                            isLoading = false,
+                                            isLoginSuccessful = true,
+                                            loggedInUser = user
+                                        )
+                                    }
+                                    .onFailure { e ->
+                                        Log.e(TAG, "│ Step 7: FAILED to fetch user data: ${e.message}", e)
+                                        Log.e(TAG, "└─── LOGIN PROCESS FAILED (user fetch) ───")
+                                        _uiState.value = _uiState.value.copy(
+                                            isLoading = false,
+                                            errorMessage = "Zalogowano, ale nie udało się pobrać danych użytkownika."
+                                        )
+                                    }
                             }
                             .onFailure { e ->
-                                Log.e(TAG, "Login failed: ${e.message}", e)
+                                Log.e(TAG, "│ Step 4: Login API FAILED: code=${(e as? ApiException)?.code}, msg=${e.message}")
+                                Log.e(TAG, "└─── LOGIN PROCESS FAILED (auth) ───")
                                 val message = when {
                                     e is ApiException && e.code == 401 ->
                                         "Nieprawidłowy e-mail lub hasło"
@@ -93,11 +131,12 @@ class LoginViewModel(
                     }
                 }
                 .addOnFailureListener {
+                    Log.e(TAG, "│ Step 2: reCAPTCHA FAILED: ${it.message}")
+                    Log.e(TAG, "└─── LOGIN PROCESS FAILED (recaptcha) ───")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = "Weryfikacja reCAPTCHA nie powiodła się. Spróbuj ponownie."
                     )
-                    Log.e(TAG, "Recaptcha failed: ${it.message}", it)
                 }
         }
     }
@@ -109,11 +148,11 @@ class LoginViewModel(
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     val repository = AuthRepository(ApiClient.api)
+                    val accountRepository = AccountRepository(ApiClient.api)
                     val tokenManager = ApiClient.getTokenManager()
-                    return LoginViewModel(repository, tokenManager) as T
+                    return LoginViewModel(repository, accountRepository, tokenManager) as T
                 }
             }
         }
     }
 }
-

@@ -8,7 +8,6 @@ import com.crw.myteacher.data.remote.dto.MeetingDto
 import com.crw.myteacher.data.remote.dto.MeetingListResponseDto
 import com.crw.myteacher.data.remote.dto.OfferDto
 import com.crw.myteacher.data.remote.dto.OfferListResponseDto
-import com.crw.myteacher.data.remote.dto.RegisterRequestDto
 import com.crw.myteacher.data.remote.dto.UserDto
 import retrofit2.Response
 import retrofit2.http.Body
@@ -20,14 +19,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface MyTeacherApi {
-
-    // ── Auth ──────────────────────────────────────────────────
-
-    @POST("api/accounts")
-    suspend fun register(
-        @Body request: RegisterRequestDto,
-        @Header("X-Recaptcha-Token") recaptchaToken: String
-    ): Response<AuthResponseDto>
 
     @POST("api/auth/login")
     suspend fun login(

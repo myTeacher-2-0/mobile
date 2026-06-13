@@ -34,10 +34,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SplashScreen(
-    onSplashFinished: () -> Unit
+    onSplashFinished: () -> Unit,
+    onAnimationReady: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var sensorOffsetX by remember { mutableFloatStateOf(0f) }
@@ -113,6 +115,9 @@ fun SplashScreen(
     )
 
     LaunchedEffect(Unit) {
+        // Rozpocznij walidację sesji równolegle z animacją
+        onAnimationReady()
+
         coroutineScope {
             launch {
                 iconScale.animateTo(
@@ -150,7 +155,7 @@ fun SplashScreen(
             }
         }
 
-        delay(400)
+        delay(400.milliseconds)
         coroutineScope {
             launch {
                 textAlpha.animateTo(
@@ -172,7 +177,7 @@ fun SplashScreen(
             }
         }
 
-        delay(2600)
+        delay(2600.milliseconds)
         onSplashFinished()
     }
 

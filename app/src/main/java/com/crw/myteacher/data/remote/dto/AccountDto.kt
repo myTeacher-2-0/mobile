@@ -4,15 +4,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserDto(
-    val id: Long,
-    val email: String,
+    val accountId: String,
     val firstName: String,
     val lastName: String,
-    val role: String,
-    val avatarUrl: String? = null,
-    val phoneNumber: String? = null,
-    val bio: String? = null,
-    val createdAt: String? = null
+    val accountType: String,
+    val profilePictureUrl: String? = null,
+    val phoneNumber: String? = null
 )
 
 @Serializable

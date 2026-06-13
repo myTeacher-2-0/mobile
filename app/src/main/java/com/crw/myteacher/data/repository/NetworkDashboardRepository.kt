@@ -5,6 +5,7 @@ import com.crw.myteacher.data.model.Lesson
 import com.crw.myteacher.data.model.LessonStatus
 import com.crw.myteacher.data.model.QuickAction
 import com.crw.myteacher.data.remote.dto.MeetingDto
+import com.crw.myteacher.data.remote.dto.UserDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -17,9 +18,16 @@ class NetworkDashboardRepository(
 
     override suspend fun getDashboard(): DashboardData {
         val userResult = accountRepository.getCurrentUser().getOrNull()
-        val meetingsResult = meetingRepository.getMyMeetings().getOrNull()
-
         val userName = userResult?.firstName ?: "Użytkowniku"
+        return buildDashboard(userName)
+    }
+
+    override suspend fun getDashboardForUser(user: UserDto): DashboardData {
+        return buildDashboard(user.firstName)
+    }
+
+    private suspend fun buildDashboard(userName: String): DashboardData {
+        val meetingsResult = meetingRepository.getMyMeetings().getOrNull()
         val meetings: List<MeetingDto> = meetingsResult?.content ?: emptyList()
 
         val today = LocalDate.now()
