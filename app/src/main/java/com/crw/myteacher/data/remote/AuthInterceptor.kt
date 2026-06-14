@@ -8,7 +8,7 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
 
     companion object {
         private const val TAG = "AuthInterceptor"
-        private val AUTH_PATHS = listOf("/api/auth/login", "/api/accounts")
+        private val AUTH_PATHS = listOf("/api/auth/login")
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -26,6 +26,7 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
             Log.d(TAG, "→ $method $path [token: ${token.take(15)}...]")
             originalRequest.newBuilder()
                 .header("Authorization", "Bearer $token")
+                .header("X-Client-Platform", "android")
                 .build()
         } else {
             Log.d(TAG, "→ $method $path [no token sent, isAuthEndpoint=$isAuthEndpoint, hasToken=$hasToken]")
