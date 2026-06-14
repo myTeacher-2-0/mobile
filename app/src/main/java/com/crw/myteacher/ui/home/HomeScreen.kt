@@ -52,14 +52,16 @@ fun HomeRoute(
     modifier: Modifier = Modifier,
     onRetry: () -> Unit,
     onNavigateToProposeLesson: () -> Unit,
-    onNavigateToCalendar: () -> Unit
+    onNavigateToCalendar: () -> Unit,
+    onNavigateToChat: () -> Unit = {}
 ) {
     HomeScreen(
         uiState = uiState,
         modifier = modifier,
         onRetry = onRetry,
         onNavigateToProposeLesson = onNavigateToProposeLesson,
-        onNavigateToCalendar = onNavigateToCalendar
+        onNavigateToCalendar = onNavigateToCalendar,
+        onNavigateToChat = onNavigateToChat
     )
 }
 
@@ -70,14 +72,16 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onRetry: () -> Unit = {},
     onNavigateToProposeLesson: () -> Unit = {},
-    onNavigateToCalendar: () -> Unit = {}
+    onNavigateToCalendar: () -> Unit = {},
+    onNavigateToChat: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = ScreenBackground,
         bottomBar = {
             BottomBar(
-                onCalendarClick = onNavigateToCalendar
+                onCalendarClick = onNavigateToCalendar,
+                onChatClick = onNavigateToChat
             )
         }
     ) { paddingValues ->
@@ -109,7 +113,12 @@ fun HomeScreen(
             }
             item { HeaderSection(data = uiState.data) }
             item { ProgressCard(data = uiState.data) }
-            item { QuickActionsSection(data = uiState.data, onClick = onNavigateToProposeLesson) }
+            item { QuickActionsSection(
+                data = uiState.data,
+                onProposeClick = onNavigateToProposeLesson,
+                onCalendarClick = onNavigateToCalendar,
+                onChatClick = onNavigateToChat
+            ) }
             item { LessonsSection(data = uiState.data) }
             item {
                 SubjectSection(subjects = uiState.data.subjects)
@@ -175,13 +184,24 @@ private fun ProgressCard(data: DashboardData) {
 }
 
 @Composable
-private fun QuickActionsSection(data: DashboardData, onClick: () -> Unit) {
+private fun QuickActionsSection(
+    data: DashboardData,
+    onProposeClick: () -> Unit,
+    onCalendarClick: () -> Unit,
+    onChatClick: () -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("Szybkie akcje", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF222833))
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             data.quickActions.forEach { action ->
+                val actionClick = when (action.id) {
+                    "propose" -> onProposeClick
+                    "calendar" -> onCalendarClick
+                    "messages" -> onChatClick
+                    else -> onProposeClick
+                }
                 Card(
-                    onClick = onClick,
+                    onClick = actionClick,
                     colors = CardDefaults.cardColors(containerColor = CardGrey),
                     shape = RoundedCornerShape(18.dp),
                     modifier = Modifier.weight(1f)
@@ -311,7 +331,7 @@ private fun SubjectSection(subjects: List<Subject>) {
 }
 
 @Composable
-private fun BottomBar(onCalendarClick: () -> Unit = {}) {
+private fun BottomBar(onCalendarClick: () -> Unit = {}, onChatClick: () -> Unit = {}) {
     Card(
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -325,7 +345,7 @@ private fun BottomBar(onCalendarClick: () -> Unit = {}) {
         ) {
             BottomBarItem("START", "H", selected = true, onClick = {})
             BottomBarItem("KALENDARZ", "K", selected = false, onClick = onCalendarClick)
-            BottomBarItem("WIADOMOSCI", "W", selected = false, onClick = {})
+            BottomBarItem("WIADOMOSCI", "W", selected = false, onClick = onChatClick)
             BottomBarItem("PROFIL", "P", selected = false, onClick = {})
         }
     }

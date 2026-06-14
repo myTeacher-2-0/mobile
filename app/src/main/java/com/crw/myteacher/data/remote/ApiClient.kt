@@ -58,5 +58,9 @@ object ApiClient {
         retrofit.create(MyTeacherApi::class.java)
     }
 
+    val chatStompClient: ChatStompClient by lazy {
+        ChatStompClient(tokenManager)
+    }
+
     fun getTokenManager(): TokenManager = tokenManager
 }

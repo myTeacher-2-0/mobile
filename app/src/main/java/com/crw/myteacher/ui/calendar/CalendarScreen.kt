@@ -1,6 +1,5 @@
 package com.crw.myteacher.ui.calendar
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,7 +64,8 @@ fun CalendarRoute(
     onNavigateBack: () -> Unit,
     onProposeLessonClick: () -> Unit,
     onPreviousMonth: () -> Unit = {},
-    onNextMonth: () -> Unit = {}
+    onNextMonth: () -> Unit = {},
+    onNavigateToChat: () -> Unit = {}
 ) {
     CalendarScreenContent(
         uiState = uiState,
@@ -74,7 +73,8 @@ fun CalendarRoute(
         onNavigateBack = onNavigateBack,
         onProposeLessonClick = onProposeLessonClick,
         onPreviousMonth = onPreviousMonth,
-        onNextMonth = onNextMonth
+        onNextMonth = onNextMonth,
+        onNavigateToChat = onNavigateToChat
     )
 }
 
@@ -85,7 +85,8 @@ fun CalendarScreenContent(
     onNavigateBack: () -> Unit,
     onProposeLessonClick: () -> Unit,
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    onNavigateToChat: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -101,7 +102,7 @@ fun CalendarScreenContent(
             }
         },
         bottomBar = {
-            BottomBarPlaceholder(onNavigateBack)
+            BottomBarPlaceholder(onNavigateBack, onNavigateToChat)
         }
     ) { paddingValues ->
         if (uiState.isLoading) {
@@ -423,8 +424,7 @@ fun MeetingCard(meeting: CalendarMeeting) {
 }
 
 @Composable
-private fun BottomBarPlaceholder(onNavigateBack: () -> Unit) {
-    val context = LocalContext.current
+private fun BottomBarPlaceholder(onNavigateBack: () -> Unit, onNavigateToChat: () -> Unit = {}) {
     Card(
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -458,9 +458,7 @@ private fun BottomBarPlaceholder(onNavigateBack: () -> Unit) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .clickable {
-                        Toast.makeText(context, "Wkrótce dostępne", Toast.LENGTH_SHORT).show()
-                    }
+                    .clickable { onNavigateToChat() }
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text("W", color = Color(0xFF8B98B4), fontSize = 16.sp, fontWeight = FontWeight.Bold)

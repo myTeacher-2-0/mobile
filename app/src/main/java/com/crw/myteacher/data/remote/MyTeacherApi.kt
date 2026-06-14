@@ -3,6 +3,8 @@ package com.crw.myteacher.data.remote
 import com.crw.myteacher.data.remote.dto.AuthResponseDto
 import com.crw.myteacher.data.remote.dto.AvailabilityOverrideDto
 import com.crw.myteacher.data.remote.dto.AvailabilityWeekDto
+import com.crw.myteacher.data.remote.dto.ChatMessageResponse
+import com.crw.myteacher.data.remote.dto.ChatRoomDto
 import com.crw.myteacher.data.remote.dto.LoginRequestDto
 import com.crw.myteacher.data.remote.dto.MeetingDto
 import com.crw.myteacher.data.remote.dto.MeetingListResponseDto
@@ -83,4 +85,18 @@ interface MyTeacherApi {
 
     @GET("api/offers/{id}")
     suspend fun getOfferById(@Path("id") offerId: Long): Response<OfferDto>
+
+    @GET("api/chat-rooms/me")
+    suspend fun getMyChatRooms(
+        @Query("before") before: String? = null,
+        @Query("limit") after: Int? = null,
+    ): Response<List<ChatRoomDto>>
+
+    @GET("api/chat-room/{id}")
+    suspend fun getLatestMessagesInChatRoom(
+        @Path("id") chatRoomId: String,
+        @Query("before") before: String? = null,
+        @Query("limit") limit: Int = 20
+    ): Response<List<ChatMessageResponse>>
+
 }

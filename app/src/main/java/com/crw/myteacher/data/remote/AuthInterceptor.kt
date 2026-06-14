@@ -38,11 +38,16 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
 
         // Jeśli serwer zwrócił 401 lub 403 i nie jest to endpoint auth — sesja wygasła
         // Reagujemy TYLKO gdy token był wysłany (użytkownik był zalogowany)
+        // NIE czyścimy tokenu gdy suppressExpiredEvent=true (np. walidacja sesji, ładowanie dashboardu)
         if (!isAuthEndpoint && hasToken && (code == 401 || code == 403)) {
-            Log.w(TAG, "⚠ SESSION EXPIRED triggered by $method $path → HTTP $code")
-            Log.w(TAG, "  suppressExpiredEvent=${SessionManager.suppressExpiredEvent}")
-            tokenManager.clear()
-            SessionManager.notifySessionExpired()
+            Log.w(TAG, "⚠ 401/403 received for $method $path, suppressExpiredEvent=${SessionManager.suppressExpiredEvent}")
+            if (!SessionManager.suppressExpiredEvent) {
+                Log.w(TAG, "⚠ SESSION EXPIRED — clearing token and notifying")
+                tokenManager.clear()
+                SessionManager.notifySessionExpired()
+            } else {
+                Log.w(TAG, "⚠ suppressExpiredEvent=true — token NOT cleared, event NOT emitted")
+            }
         }
 
         return response

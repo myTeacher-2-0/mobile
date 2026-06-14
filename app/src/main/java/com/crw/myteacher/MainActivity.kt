@@ -20,6 +20,8 @@ import com.crw.myteacher.data.remote.ApiClient
 import com.crw.myteacher.data.remote.SessionManager
 import com.crw.myteacher.ui.calendar.CalendarRoute
 import com.crw.myteacher.ui.calendar.CalendarViewModel
+import com.crw.myteacher.ui.chat.ChatListRoute
+import com.crw.myteacher.ui.chat.ChatListViewModel
 import com.crw.myteacher.ui.home.HomeRoute
 import com.crw.myteacher.ui.home.HomeViewModel
 import com.crw.myteacher.ui.login.LoginRoute
@@ -45,6 +47,9 @@ object Calendar
 
 @Serializable
 object ProposeLesson
+
+@Serializable
+object ChatList
 
 class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels { HomeViewModel.factory() }
@@ -144,7 +149,8 @@ class MainActivity : ComponentActivity() {
                             uiState = uiState,
                             onRetry = homeViewModel::loadDashboard,
                             onNavigateToProposeLesson = { navController.navigate(ProposeLesson) },
-                            onNavigateToCalendar = { navController.navigate(Calendar) }
+                            onNavigateToCalendar = { navController.navigate(Calendar) },
+                            onNavigateToChat = { navController.navigate(ChatList) }
                         )
                     }
                     composable<Calendar> {
@@ -156,7 +162,20 @@ class MainActivity : ComponentActivity() {
                             onNavigateBack = { navController.popBackStack() },
                             onProposeLessonClick = { navController.navigate(ProposeLesson) },
                             onPreviousMonth = calendarViewModel::previousMonth,
-                            onNextMonth = calendarViewModel::nextMonth
+                            onNextMonth = calendarViewModel::nextMonth,
+                            onNavigateToChat = { navController.navigate(ChatList) }
+                        )
+                    }
+                    composable<ChatList> {
+                        val chatListViewModel: ChatListViewModel by viewModels { ChatListViewModel.factory() }
+                        val chatListState by chatListViewModel.uiState.collectAsStateWithLifecycle()
+                        ChatListRoute(
+                            uiState = chatListState,
+                            onNavigateBack = { navController.popBackStack() },
+                            onChatRoomClick = { chatRoomId ->
+                                // TODO: nawigacja do widoku konwersacji
+                            },
+                            onRetry = chatListViewModel::loadChatRooms
                         )
                     }
                 }
