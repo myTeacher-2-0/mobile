@@ -24,6 +24,10 @@ import com.crw.myteacher.ui.home.HomeRoute
 import com.crw.myteacher.ui.home.HomeViewModel
 import com.crw.myteacher.ui.login.LoginRoute
 import com.crw.myteacher.ui.login.LoginViewModel
+import com.crw.myteacher.ui.messages.ConversationRoute
+import com.crw.myteacher.ui.messages.MessagesRoute
+import com.crw.myteacher.ui.profile.ProfileRoute
+import com.crw.myteacher.ui.profile.ProfileViewModel
 import com.crw.myteacher.ui.splash.SessionCheckResult
 import com.crw.myteacher.ui.splash.SplashScreen
 import com.crw.myteacher.ui.splash.SplashViewModel
@@ -44,7 +48,13 @@ object Home
 object Calendar
 
 @Serializable
-object ProposeLesson
+object Profile
+
+@Serializable
+object Messages
+
+@Serializable
+object Conversation
 
 class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels { HomeViewModel.factory() }
@@ -143,8 +153,9 @@ class MainActivity : ComponentActivity() {
                         HomeRoute(
                             uiState = uiState,
                             onRetry = homeViewModel::loadDashboard,
-                            onNavigateToProposeLesson = { navController.navigate(ProposeLesson) },
-                            onNavigateToCalendar = { navController.navigate(Calendar) }
+                            onNavigateToCalendar = { navController.navigate(Calendar) },
+                            onNavigateToProfile = { navController.navigate(Profile) },
+                            onNavigateToMessages = { navController.navigate(Messages) { launchSingleTop = true } }
                         )
                     }
                     composable<Calendar> {
@@ -153,10 +164,70 @@ class MainActivity : ComponentActivity() {
                         CalendarRoute(
                             uiState = calendarState,
                             onDateSelected = calendarViewModel::selectDate,
-                            onNavigateBack = { navController.popBackStack() },
-                            onProposeLessonClick = { navController.navigate(ProposeLesson) },
+                            onNavigateToHome = {
+                                navController.navigate(Home) {
+                                    popUpTo(Home) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToProfile = {
+                                navController.navigate(Profile) { launchSingleTop = true }
+                            },
+                            onNavigateToMessages = {
+                                navController.navigate(Messages) { launchSingleTop = true }
+                            },
                             onPreviousMonth = calendarViewModel::previousMonth,
                             onNextMonth = calendarViewModel::nextMonth
+                        )
+                    }
+                    composable<Profile> {
+                        val profileViewModel: ProfileViewModel by viewModels { ProfileViewModel.factory() }
+                        val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
+                        ProfileRoute(
+                            uiState = profileState,
+                            onNavigateToStart = {
+                                navController.navigate(Home) {
+                                    popUpTo(Home) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToCalendar = {
+                                navController.navigate(Calendar) { launchSingleTop = true }
+                            },
+                            onNavigateToMessages = {
+                                navController.navigate(Messages) { launchSingleTop = true }
+                            },
+                            onLogout = {
+                                profileViewModel.logout()
+                                homeViewModel.reset()
+                                navController.navigate(Login) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable<Messages> {
+                        MessagesRoute(
+                            onNavigateToHome = {
+                                navController.navigate(Home) {
+                                    popUpTo(Home) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToCalendar = {
+                                navController.navigate(Calendar) { launchSingleTop = true }
+                            },
+                            onNavigateToProfile = {
+                                navController.navigate(Profile) { launchSingleTop = true }
+                            },
+                            onConversationClick = {
+                                navController.navigate(Conversation)
+                            }
+                        )
+                    }
+                    composable<Conversation> {
+                        ConversationRoute(
+                            onNavigateBack = { navController.popBackStack() }
                         )
                     }
                 }

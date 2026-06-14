@@ -1,6 +1,7 @@
 package com.crw.myteacher.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,10 +40,12 @@ import com.crw.myteacher.data.model.Lesson
 import com.crw.myteacher.data.model.LessonStatus
 import com.crw.myteacher.data.model.Subject
 
+import com.crw.myteacher.ui.components.AppBottomBar
+import com.crw.myteacher.ui.components.BottomTab
+
 private val ScreenBackground = Color(0xFFF2F4F7)
 private val BrandBlue = Color(0xFF0D4CCC)
 private val LightBlue = Color(0xFF4A7DF3)
-private val CardGrey = Color(0xFFE6E8EC)
 private val MutedText = Color(0xFF6F7684)
 
 @Composable
@@ -51,15 +53,17 @@ fun HomeRoute(
     uiState: HomeUiState,
     modifier: Modifier = Modifier,
     onRetry: () -> Unit,
-    onNavigateToProposeLesson: () -> Unit,
-    onNavigateToCalendar: () -> Unit
+    onNavigateToCalendar: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onNavigateToMessages: () -> Unit = {}
 ) {
     HomeScreen(
         uiState = uiState,
         modifier = modifier,
         onRetry = onRetry,
-        onNavigateToProposeLesson = onNavigateToProposeLesson,
-        onNavigateToCalendar = onNavigateToCalendar
+        onNavigateToCalendar = onNavigateToCalendar,
+        onNavigateToProfile = onNavigateToProfile,
+        onNavigateToMessages = onNavigateToMessages
     )
 }
 
@@ -69,15 +73,19 @@ fun HomeScreen(
     uiState: HomeUiState,
     modifier: Modifier = Modifier,
     onRetry: () -> Unit = {},
-    onNavigateToProposeLesson: () -> Unit = {},
-    onNavigateToCalendar: () -> Unit = {}
+    onNavigateToCalendar: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToMessages: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = ScreenBackground,
         bottomBar = {
-            BottomBar(
-                onCalendarClick = onNavigateToCalendar
+            AppBottomBar(
+                selected = BottomTab.START,
+                onCalendarClick = onNavigateToCalendar,
+                onMessagesClick = onNavigateToMessages,
+                onProfileClick = onNavigateToProfile
             )
         }
     ) { paddingValues ->
@@ -109,8 +117,7 @@ fun HomeScreen(
             }
             item { HeaderSection(data = uiState.data) }
             item { ProgressCard(data = uiState.data) }
-            item { QuickActionsSection(data = uiState.data, onClick = onNavigateToProposeLesson) }
-            item { LessonsSection(data = uiState.data) }
+            item { LessonsSection(data = uiState.data, onSeeAll = onNavigateToCalendar) }
             item {
                 SubjectSection(subjects = uiState.data.subjects)
                 Spacer(modifier = Modifier.height(12.dp))
@@ -157,7 +164,7 @@ private fun ProgressCard(data: DashboardData) {
                         fontWeight = FontWeight.ExtraBold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = data.completedLabel, color = Color(0xFFE7EEFF), fontSize = 34.sp, fontWeight = FontWeight.Medium)
+                    Text(text = data.completedLabel, color = Color(0xFFE7EEFF), fontSize = 20.sp, fontWeight = FontWeight.Medium)
                 }
                 LinearProgressIndicator(
                     progress = { data.progressPercent / 100f },
@@ -168,50 +175,14 @@ private fun ProgressCard(data: DashboardData) {
                     color = Color.White,
                     trackColor = Color(0x3DFFFFFF)
                 )
-                Text(text = data.remainingMeetingsLabel, color = Color(0xFFD7E3FF), fontSize = 24.sp, lineHeight = 30.sp)
+                Text(text = data.remainingMeetingsLabel, color = Color(0xFFD7E3FF), fontSize = 16.sp, lineHeight = 22.sp)
             }
         }
     }
 }
 
 @Composable
-private fun QuickActionsSection(data: DashboardData, onClick: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text("Szybkie akcje", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF222833))
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            data.quickActions.forEach { action ->
-                Card(
-                    onClick = onClick,
-                    colors = CardDefaults.cardColors(containerColor = CardGrey),
-                    shape = RoundedCornerShape(18.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(Color(0xFFD5DFF0)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(action.iconText, color = BrandBlue, fontWeight = FontWeight.Bold, fontSize = 26.sp)
-                        }
-                        Text(action.title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun LessonsSection(data: DashboardData) {
+private fun LessonsSection(data: DashboardData, onSeeAll: () -> Unit = {}) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -219,7 +190,13 @@ private fun LessonsSection(data: DashboardData) {
             verticalAlignment = Alignment.Bottom
         ) {
             Text("Dzisiejsze zajecia", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-            Text("Zobacz wszystkie", color = BrandBlue, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Zobacz wszystkie",
+                color = BrandBlue,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable { onSeeAll() }
+            )
         }
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             data.todaysLessons.forEach { lesson ->
@@ -306,47 +283,6 @@ private fun SubjectSection(subjects: List<Subject>) {
                     Text(subject.name, color = textColor, fontWeight = FontWeight.SemiBold)
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun BottomBar(onCalendarClick: () -> Unit = {}) {
-    Card(
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFD))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            BottomBarItem("START", "H", selected = true, onClick = {})
-            BottomBarItem("KALENDARZ", "K", selected = false, onClick = onCalendarClick)
-            BottomBarItem("WIADOMOSCI", "W", selected = false, onClick = {})
-            BottomBarItem("PROFIL", "P", selected = false, onClick = {})
-        }
-    }
-}
-
-@Composable
-private fun BottomBarItem(label: String, iconLabel: String, selected: Boolean, onClick: () -> Unit = {}) {
-    val textColor = if (selected) BrandBlue else Color(0xFF8B98B4)
-    val background = if (selected) Color(0xFFE9EDF4) else Color.Transparent
-    Card(
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = background),
-        shape = RoundedCornerShape(18.dp),
-        modifier = Modifier
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Text(iconLabel, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(label, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.crw.myteacher.ui.calendar
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,7 +25,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +41,8 @@ import androidx.compose.ui.unit.sp
 import com.crw.myteacher.R
 import com.crw.myteacher.data.model.CalendarMeeting
 import com.crw.myteacher.data.model.LessonActionType
+import com.crw.myteacher.ui.components.AppBottomBar
+import com.crw.myteacher.ui.components.BottomTab
 import com.crw.myteacher.ui.theme.BrandBlue
 import com.crw.myteacher.ui.theme.DarkText
 import com.crw.myteacher.ui.theme.LightCardBg
@@ -63,16 +62,18 @@ fun Int.lessonCountLabel(): String = when (this) {
 fun CalendarRoute(
     uiState: CalendarUiState,
     onDateSelected: (LocalDate) -> Unit,
-    onNavigateBack: () -> Unit,
-    onProposeLessonClick: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {}
 ) {
     CalendarScreenContent(
         uiState = uiState,
         onDateSelected = onDateSelected,
-        onNavigateBack = onNavigateBack,
-        onProposeLessonClick = onProposeLessonClick,
+        onNavigateToHome = onNavigateToHome,
+        onNavigateToProfile = onNavigateToProfile,
+        onNavigateToMessages = onNavigateToMessages,
         onPreviousMonth = onPreviousMonth,
         onNextMonth = onNextMonth
     )
@@ -82,26 +83,22 @@ fun CalendarRoute(
 fun CalendarScreenContent(
     uiState: CalendarUiState,
     onDateSelected: (LocalDate) -> Unit,
-    onNavigateBack: () -> Unit,
-    onProposeLessonClick: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = ScreenBackground,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onProposeLessonClick,
-                containerColor = BrandBlue,
-                contentColor = Color.White,
-                shape = CircleShape
-            ) {
-                Text("+", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            }
-        },
         bottomBar = {
-            BottomBarPlaceholder(onNavigateBack)
+            AppBottomBar(
+                selected = BottomTab.CALENDAR,
+                onStartClick = onNavigateToHome,
+                onMessagesClick = onNavigateToMessages,
+                onProfileClick = onNavigateToProfile
+            )
         }
     ) { paddingValues ->
         if (uiState.isLoading) {
@@ -422,57 +419,3 @@ fun MeetingCard(meeting: CalendarMeeting) {
     }
 }
 
-@Composable
-private fun BottomBarPlaceholder(onNavigateBack: () -> Unit) {
-    val context = LocalContext.current
-    Card(
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFD))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clickable { onNavigateBack() }
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text("H", color = Color(0xFF8B98B4), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text("START", color = Color(0xFF8B98B4), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFFE9EDF4))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text("K", color = BrandBlue, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text("KALENDARZ", color = BrandBlue, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clickable {
-                        Toast.makeText(context, "Wkrótce dostępne", Toast.LENGTH_SHORT).show()
-                    }
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text("W", color = Color(0xFF8B98B4), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text("WIADOMOŚCI", color = Color(0xFF8B98B4), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text("P", color = Color(0xFF8B98B4), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text("PROFIL", color = Color(0xFF8B98B4), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
-}
