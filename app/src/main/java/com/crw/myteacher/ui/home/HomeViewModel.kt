@@ -93,6 +93,11 @@ class HomeViewModel(
         }
     }
 
+    fun reset() {
+        isLoadingInProgress = false
+        _uiState.value = HomeUiState()
+    }
+
     private fun emptyErrorState(): HomeUiState {
         val emptyData = DashboardData(
             dateLabel = "",
