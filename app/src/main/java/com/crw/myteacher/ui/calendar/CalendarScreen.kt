@@ -66,7 +66,8 @@ fun CalendarRoute(
     onNavigateToProfile: () -> Unit,
     onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
-    onNextMonth: () -> Unit = {}
+    onNextMonth: () -> Unit = {},
+    onNavigateToChat: () -> Unit = {}
 ) {
     CalendarScreenContent(
         uiState = uiState,
@@ -75,7 +76,8 @@ fun CalendarRoute(
         onNavigateToProfile = onNavigateToProfile,
         onNavigateToMessages = onNavigateToMessages,
         onPreviousMonth = onPreviousMonth,
-        onNextMonth = onNextMonth
+        onNextMonth = onNextMonth,
+        onNavigateToChat = onNavigateToChat
     )
 }
 
@@ -87,7 +89,8 @@ fun CalendarScreenContent(
     onNavigateToProfile: () -> Unit,
     onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    onNavigateToChat: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -418,4 +421,3 @@ fun MeetingCard(meeting: CalendarMeeting) {
         }
     }
 }
-

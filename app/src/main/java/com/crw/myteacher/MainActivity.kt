@@ -20,6 +20,8 @@ import com.crw.myteacher.data.remote.ApiClient
 import com.crw.myteacher.data.remote.SessionManager
 import com.crw.myteacher.ui.calendar.CalendarRoute
 import com.crw.myteacher.ui.calendar.CalendarViewModel
+import com.crw.myteacher.ui.chat.ChatListRoute
+import com.crw.myteacher.ui.chat.ChatListViewModel
 import com.crw.myteacher.ui.home.HomeRoute
 import com.crw.myteacher.ui.home.HomeViewModel
 import com.crw.myteacher.ui.login.LoginRoute
@@ -55,6 +57,9 @@ object Messages
 
 @Serializable
 object Conversation
+
+@Serializable
+object ChatList
 
 class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels { HomeViewModel.factory() }
@@ -177,9 +182,22 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(Messages) { launchSingleTop = true }
                             },
                             onPreviousMonth = calendarViewModel::previousMonth,
-                            onNextMonth = calendarViewModel::nextMonth
+                            onNextMonth = calendarViewModel::nextMonth,
+                            onNavigateToChat = { navController.navigate(ChatList) }
                         )
                     }
+//                    composable<ChatList> {
+//                        val chatListViewModel: ChatListViewModel by viewModels { ChatListViewModel.factory() }
+//                        val chatListState by chatListViewModel.uiState.collectAsStateWithLifecycle()
+//                        ChatListRoute(
+//                            uiState = chatListState,
+//                            onNavigateBack = { navController.popBackStack() },
+//                            onChatRoomClick = { chatRoomId ->
+//                                // TODO: nawigacja do widoku konwersacji
+//                            },
+//                            onRetry = chatListViewModel::loadChatRooms
+//                        )
+//                    }
                     composable<Profile> {
                         val profileViewModel: ProfileViewModel by viewModels { ProfileViewModel.factory() }
                         val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()

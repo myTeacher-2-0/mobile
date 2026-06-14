@@ -59,6 +59,10 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization.converter)
     implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.okhttp)
+    implementation(libs.krossbow.stomp.core)
+    implementation(libs.krossbow.websocket.okhttp)
+    implementation(libs.krossbow.stomp.kxserialization.json)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.google.recaptcha)
 
