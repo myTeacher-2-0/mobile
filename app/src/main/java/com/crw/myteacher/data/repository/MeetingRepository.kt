@@ -6,7 +6,7 @@ import com.crw.myteacher.data.remote.dto.MeetingListResponseDto
 
 class MeetingRepository(private val api: MyTeacherApi) : BaseRepository() {
 
-    suspend fun getMyMeetings(): Result<MeetingListResponseDto> {
+    suspend fun getMyMeetings(): Result<List<MeetingDto>> {
         return safeApiCall { api.getMyMeetings() }
     }
 

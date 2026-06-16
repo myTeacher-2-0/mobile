@@ -27,8 +27,7 @@ class NetworkDashboardRepository(
     }
 
     private suspend fun buildDashboard(userName: String): DashboardData {
-        val meetingsResult = meetingRepository.getMyMeetings().getOrNull()
-        val meetings: List<MeetingDto> = meetingsResult?.content ?: emptyList()
+        val meetings: List<MeetingDto> = meetingRepository.getMyMeetings().getOrNull() ?: emptyList()
 
         val today = LocalDate.now()
         val dateFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())
@@ -67,11 +66,11 @@ class NetworkDashboardRepository(
                     || dto.status.equals("IN_PROGRESS", ignoreCase = true)
 
             Lesson(
-                id = dto.id.toString(),
-                subjectLabel = dto.subjectName ?: "",
+                id = dto.meetingId.toString(),
+                subjectLabel = "Pobrać przedmiot",
                 timeRange = timeRange,
                 teacherTitle = "Nauczyciel",
-                teacherName = dto.teacherName ?: "",
+                teacherName = accountRepository.getUserById(dto.owner.accountId).getOrNull()?.firstName ?: "Nauczyciel",
                 status = if (isJoinable) LessonStatus.JOINABLE else LessonStatus.UPCOMING,
                 actionLabel = if (isJoinable) "DOŁĄCZ" else "SZCZEGÓŁY",
                 isPrimary = isJoinable

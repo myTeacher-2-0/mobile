@@ -2,21 +2,18 @@
 import kotlinx.serialization.Serializable
 @Serializable
 data class MeetingDto(
-    val id: Long,
-    val title: String? = null,
-    val description: String? = null,
+    val meetingId: Long,
+    val topic: String,
+    val date: String,
     val startTime: String,
     val endTime: String,
     val status: String,
-    val meetingLink: String? = null,
-    val teacherId: Long? = null,
-    val teacherName: String? = null,
-    val studentId: Long? = null,
-    val studentName: String? = null,
-    val subjectName: String? = null,
-    val notes: String? = null,
-    val createdAt: String? = null
+    val owner: MeetingMemberResponse,
+    val members: List<MeetingMemberResponse> = emptyList(),
 )
+
+@Serializable
+data class MeetingMemberResponse(val accountId: String, val status: String)
 @Serializable
 data class MeetingListResponseDto(
     val content: List<MeetingDto> = emptyList(),

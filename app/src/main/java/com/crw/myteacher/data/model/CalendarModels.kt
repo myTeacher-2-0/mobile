@@ -11,13 +11,11 @@ enum class LessonActionType {
 
 data class CalendarMeeting(
     val id: Long,
-    val subject: String,
     val title: String,
     val timeRange: String,
     val durationMin: Int,
-    val teacherName: String,
+    val teacherId: String,
     val status: String,
-    val meetingLink: String?,
     val actionType: LessonActionType
 )
 
@@ -46,23 +44,12 @@ fun MeetingDto.toCalendarMeeting(): CalendarMeeting {
     }
 
     return CalendarMeeting(
-        id = id,
-        subject = subjectName ?: "",
-        title = title ?: "Spotkanie #$id",
+        id = meetingId,
+        title = topic,
         timeRange = timeRange,
         durationMin = durationMin,
-        teacherName = teacherName ?: "",
+        teacherId = owner.accountId,
         status = status,
-        meetingLink = meetingLink,
         actionType = actionType
     )
 }
-
-data class MockTeacher(
-    val name: String,
-    val role: String,
-    val description: String,
-    val rating: Float,
-    val lessonsCount: Int,
-    val pricePerLesson: Double
-)

@@ -1,11 +1,14 @@
 package com.crw.myteacher
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,12 +19,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.crw.myteacher.data.remote.ApiClient
 import com.crw.myteacher.data.remote.SessionManager
+import com.crw.myteacher.push.PushNotificationService
 import com.crw.myteacher.ui.calendar.CalendarRoute
 import com.crw.myteacher.ui.calendar.CalendarViewModel
-import com.crw.myteacher.ui.chat.ChatListRoute
-import com.crw.myteacher.ui.chat.ChatListViewModel
 import com.crw.myteacher.ui.home.HomeRoute
 import com.crw.myteacher.ui.home.HomeViewModel
 import com.crw.myteacher.ui.login.LoginRoute
@@ -56,7 +59,7 @@ object Profile
 object Messages
 
 @Serializable
-object Conversation
+data class Conversation(val chatRoomId: String)
 
 @Serializable
 object ChatList
@@ -65,9 +68,16 @@ class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels { HomeViewModel.factory() }
     private val splashViewModel: SplashViewModel by viewModels { SplashViewModel.factory() }
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        Log.d("MainActivity", "POST_NOTIFICATIONS permission granted: $granted")
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ApiClient.init(this)
+        requestNotificationPermission()
         enableEdgeToEdge()
         setContent {
             MyTeacherTheme(dynamicColor = false) {
@@ -112,6 +122,7 @@ class MainActivity : ComponentActivity() {
                                 is SessionCheckResult.Authenticated -> {
                                     hasNavigated = true
                                     homeViewModel.loadDashboardWithUser(state.user)
+                                    PushNotificationService.start(this@MainActivity)
                                     navController.navigate(Home) {
                                         popUpTo(Splash) { inclusive = true }
                                     }
@@ -147,6 +158,7 @@ class MainActivity : ComponentActivity() {
                                     Log.w("MainActivity", "onLoginSuccess: user is NULL, falling back to loadDashboard()")
                                     homeViewModel.loadDashboard()
                                 }
+                                PushNotificationService.start(this@MainActivity)
                                 navController.navigate(Home) {
                                     popUpTo(Login) { inclusive = true }
                                 }
@@ -218,6 +230,7 @@ class MainActivity : ComponentActivity() {
                             onLogout = {
                                 profileViewModel.logout()
                                 homeViewModel.reset()
+                                PushNotificationService.stop(this@MainActivity)
                                 navController.navigate(Login) {
                                     popUpTo(0) { inclusive = true }
                                 }
@@ -238,18 +251,35 @@ class MainActivity : ComponentActivity() {
                             onNavigateToProfile = {
                                 navController.navigate(Profile) { launchSingleTop = true }
                             },
-                            onConversationClick = {
-                                navController.navigate(Conversation)
+                            onConversationClick = { chatRoomId ->
+                                navController.navigate(Conversation(chatRoomId))
                             }
                         )
                     }
-                    composable<Conversation> {
+                    composable<Conversation> { backStackEntry ->
+                        val conversation = backStackEntry.toRoute<Conversation>()
+
+                        // Wycisz powiadomienia gdy czat jest otwarty
+                        androidx.compose.runtime.DisposableEffect(conversation.chatRoomId) {
+                            PushNotificationService.activeChatRoomId = conversation.chatRoomId
+                            onDispose {
+                                PushNotificationService.activeChatRoomId = null
+                            }
+                        }
+
                         ConversationRoute(
+                            chatRoomId = conversation.chatRoomId,
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
                 }
             }
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }

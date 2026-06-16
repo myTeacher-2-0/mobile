@@ -69,7 +69,7 @@ class CalendarViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             val result = meetingRepository.getMyMeetings()
             result.onSuccess { dtos ->
-                val meetings = dtos.component1()
+                val meetings = dtos
                     .map { it.toCalendarMeeting() }
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

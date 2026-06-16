@@ -21,11 +21,14 @@ import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.crw.myteacher.data.remote.dto.ChatRoomDto
 import com.crw.myteacher.ui.components.AppBottomBar
 import com.crw.myteacher.ui.components.BottomTab
 import com.crw.myteacher.ui.theme.BrandBlue
@@ -41,33 +46,18 @@ import com.crw.myteacher.ui.theme.DarkText
 import com.crw.myteacher.ui.theme.MutedText
 import com.crw.myteacher.ui.theme.ScreenBackground
 
-data class ConversationItem(
-    val id: Int,
-    val teacherName: String,
-    val subject: String,
-    val lastMessage: String,
-    val timeLabel: String,
-    val unreadCount: Int = 0,
-    val isOnline: Boolean = false,
-    val initials: String,
-    val avatarColor: Color = Color(0xFF3F4858)
-)
-
-private val dummyConversations = listOf(
-    ConversationItem(1, "Dr. Elena Rossi", "ADVANCED MATHEMATICS", "Lorem ipsum dolor sit amet,", "10:42 AM", unreadCount = 2, isOnline = true, initials = "ER", avatarColor = Color(0xFF3A5A8C)),
-    ConversationItem(2, "Mgr Marek Nowak", "PHYSICS", "Lorem ipsum, stabat matter...", "YESTERDAY", initials = "MN", avatarColor = Color(0xFF5A3A8C)),
-    ConversationItem(3, "Sara Jenkins", "ENGLISH LITERATURE", "Lorem ipsum dolor sit amet,", "MON", isOnline = true, initials = "SJ", avatarColor = Color(0xFF8C3A3A)),
-    ConversationItem(4, "Prof. David Klein", "CHEMISTRY", "Lorem ipsum dolor sit amet,", "23 OCT", initials = "DK", avatarColor = Color(0xFF3A6C4A)),
-)
-
 @Composable
 fun MessagesRoute(
     onNavigateToHome: () -> Unit,
     onNavigateToCalendar: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onConversationClick: () -> Unit
+    onConversationClick: (String) -> Unit,
+    viewModel: MessagesViewModel = viewModel(factory = MessagesViewModel.factory())
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     MessagesScreen(
+        uiState = uiState,
         onNavigateToHome = onNavigateToHome,
         onNavigateToCalendar = onNavigateToCalendar,
         onNavigateToProfile = onNavigateToProfile,
@@ -77,10 +67,11 @@ fun MessagesRoute(
 
 @Composable
 fun MessagesScreen(
+    uiState: MessagesUiState,
     onNavigateToHome: () -> Unit = {},
     onNavigateToCalendar: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    onConversationClick: () -> Unit = {}
+    onConversationClick: (String) -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -112,42 +103,111 @@ fun MessagesScreen(
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { SearchBar() }
             item { Spacer(modifier = Modifier.height(4.dp)) }
-            items(dummyConversations) { conversation ->
-                ConversationRow(item = conversation, onClick = onConversationClick)
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = 66.dp),
-                    color = Color(0xFFEEF0F3),
-                    thickness = 1.dp
-                )
-            }
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xFFE6E9EF)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.ChatBubbleOutline,
-                            contentDescription = null,
-                            tint = MutedText,
-                            modifier = Modifier.size(26.dp)
+
+            when {
+                uiState.isLoading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = BrandBlue)
+                        }
+                    }
+                }
+                uiState.errorMessage != null -> {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                uiState.errorMessage,
+                                color = MutedText,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+                uiState.chatRooms.isEmpty() -> {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Color(0xFFE6E9EF)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ChatBubbleOutline,
+                                    contentDescription = null,
+                                    tint = MutedText,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Text(
+                                "BRAK WIADOMOŚCI",
+                                color = MutedText,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    items(uiState.chatRooms) { room ->
+                        ConversationRow(
+                            room = room,
+                            onClick = { onConversationClick(room.id) }
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(start = 66.dp),
+                            color = Color(0xFFEEF0F3),
+                            thickness = 1.dp
                         )
                     }
-                    Text(
-                        "KONIEC WIADOMOŚCI",
-                        color = MutedText,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Color(0xFFE6E9EF)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ChatBubbleOutline,
+                                    contentDescription = null,
+                                    tint = MutedText,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Text(
+                                "KONIEC WIADOMOŚCI",
+                                color = MutedText,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -173,13 +233,21 @@ private fun SearchBar() {
                 tint = MutedText,
                 modifier = Modifier.size(18.dp)
             )
-            Text("Search conversations...", color = MutedText, fontSize = 14.sp)
+            Text("Szukaj konwersacji...", color = MutedText, fontSize = 14.sp)
         }
     }
 }
 
 @Composable
-private fun ConversationRow(item: ConversationItem, onClick: () -> Unit) {
+private fun ConversationRow(room: ChatRoomDto, onClick: () -> Unit) {
+    val initials = room.name
+        .split(" ")
+        .take(2)
+        .mapNotNull { it.firstOrNull()?.uppercaseChar() }
+        .joinToString("")
+
+    val avatarColor = generateAvatarColor(room.id)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,31 +261,15 @@ private fun ConversationRow(item: ConversationItem, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape)
-                    .background(item.avatarColor),
+                    .background(avatarColor),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    item.initials,
+                    initials,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-            }
-            if (item.isOnline) {
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .clip(CircleShape)
-                        .background(Color.White),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF4CAF50))
-                    )
-                }
             }
         }
 
@@ -231,47 +283,19 @@ private fun ConversationRow(item: ConversationItem, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    item.teacherName,
+                    room.name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = DarkText
                 )
                 Text(
-                    item.timeLabel,
+                    formatTimestamp(room.lastMessage?.timestamp),
                     color = MutedText,
                     fontSize = 11.sp
                 )
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    item.subject,
-                    color = BrandBlue,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                if (item.unreadCount > 0) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(BrandBlue),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            item.unreadCount.toString(),
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
             Text(
-                item.lastMessage,
+                room.lastMessage?.content ?: "Brak wiadomości",
                 color = MutedText,
                 fontSize = 13.sp,
                 maxLines = 1,
@@ -280,3 +304,32 @@ private fun ConversationRow(item: ConversationItem, onClick: () -> Unit) {
         }
     }
 }
+
+private fun generateAvatarColor(id: String): Color {
+    val colors = listOf(
+        Color(0xFF3A5A8C),
+        Color(0xFF5A3A8C),
+        Color(0xFF8C3A3A),
+        Color(0xFF3A6C4A),
+        Color(0xFF8C6A3A),
+        Color(0xFF3A8C8C),
+    )
+    val index = id.hashCode().let { if (it < 0) -it else it } % colors.size
+    return colors[index]
+}
+
+private fun formatTimestamp(timestamp: String?): String {
+    if (timestamp == null) return ""
+    // Show time portion if available, otherwise show raw
+    return try {
+        val parts = timestamp.split("T")
+        if (parts.size >= 2) {
+            parts[1].take(5) // HH:mm
+        } else {
+            timestamp
+        }
+    } catch (_: Exception) {
+        timestamp
+    }
+}
+

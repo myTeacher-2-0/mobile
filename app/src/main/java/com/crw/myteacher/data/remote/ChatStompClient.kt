@@ -39,8 +39,8 @@ class ChatStompClient(
 
         // Spring WebSocket endpoint
         private val WS_URL = BuildConfig.API_BASE_URL
-            .replace("https://", "wss://")
-            .replace("http://", "ws://")
+            .replace("https://", "wss://api.")
+            .replace("http://", "ws://api.")
             .trimEnd('/') + "/ws"
 
         // STOMP destinations
@@ -85,7 +85,7 @@ class ChatStompClient(
         if (token.isNullOrBlank()) {
             Log.e(TAG, "connect() — no token available, cannot connect")
             _connectionState.value = ConnectionState.ERROR
-            return
+            throw IllegalStateException("No auth token available, cannot connect WebSocket")
         }
 
         _connectionState.value = ConnectionState.CONNECTING
@@ -99,7 +99,7 @@ class ChatStompClient(
 
             stompSession = stompClient.connect(
                 url = WS_URL,
-                customStompConnectHeaders = mapOf("Authorization" to "Bearer $token")
+                customStompConnectHeaders = mapOf("Authorization" to "Bearer $token", "X-Client-Platform" to "android"),
             )
             _connectionState.value = ConnectionState.CONNECTED
             Log.d(TAG, "connect() — CONNECTED successfully")
@@ -107,6 +107,7 @@ class ChatStompClient(
             Log.e(TAG, "connect() — FAILED: ${e.message}", e)
             _connectionState.value = ConnectionState.ERROR
             stompSession = null
+            throw e
         }
     }
 

@@ -35,12 +35,12 @@ interface MyTeacherApi {
     suspend fun getCurrentUser(): Response<UserDto>
 
     @GET("api/accounts/{id}")
-    suspend fun getUserById(@Path("id") userId: Long): Response<UserDto>
+    suspend fun getUserById(@Path("id") userId: String): Response<UserDto>
 
     // ── Meetings ─────────────────────────────────────────────
 
     @GET("api/meetings/me")
-    suspend fun getMyMeetings(): Response<MeetingListResponseDto>
+    suspend fun getMyMeetings(): Response<List<MeetingDto>>
 
     @PUT("api/meetings/{id}/confirm")
     suspend fun confirmMeeting(@Path("id") meetingId: Long): Response<MeetingDto>
@@ -92,7 +92,7 @@ interface MyTeacherApi {
         @Query("limit") after: Int? = null,
     ): Response<List<ChatRoomDto>>
 
-    @GET("api/chat-room/{id}")
+    @GET("api/chat-messages/chat-room/{id}")
     suspend fun getLatestMessagesInChatRoom(
         @Path("id") chatRoomId: String,
         @Query("before") before: String? = null,

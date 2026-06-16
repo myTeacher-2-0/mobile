@@ -9,7 +9,7 @@ class AccountRepository(private val api: MyTeacherApi) : BaseRepository() {
         return safeApiCall { api.getCurrentUser() }
     }
 
-    suspend fun getUserById(userId: Long): Result<UserDto> {
+    suspend fun getUserById(userId: String): Result<UserDto> {
         return safeApiCall { api.getUserById(userId) }
     }
 }

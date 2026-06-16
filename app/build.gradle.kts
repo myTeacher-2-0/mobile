@@ -65,7 +65,6 @@ dependencies {
     implementation(libs.krossbow.stomp.kxserialization.json)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.google.recaptcha)
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

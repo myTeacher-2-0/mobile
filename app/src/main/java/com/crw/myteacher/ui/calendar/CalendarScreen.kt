@@ -51,6 +51,7 @@ import com.crw.myteacher.ui.theme.ScreenBackground
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.Locale
 
 fun Int.lessonCountLabel(): String = when (this) {
     1 -> "1 lekcja"
@@ -220,8 +221,10 @@ fun CalendarGrid(
         ) {
             Text(
                 text = currentMonth.let {
-                    val formatter = java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy", java.util.Locale("pl"))
-                    it.format(formatter).replaceFirstChar { c -> c.titlecase(java.util.Locale("pl")) }
+                    val formatter = java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy",
+                        Locale("pl")
+                    )
+                    it.format(formatter).replaceFirstChar { c -> c.titlecase(Locale("pl")) }
                 },
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
@@ -350,7 +353,7 @@ fun MeetingCard(meeting: CalendarMeeting) {
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = meeting.subject.uppercase(),
+                            text = meeting.title.uppercase(),
                             color = BrandBlue,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -386,13 +389,13 @@ fun MeetingCard(meeting: CalendarMeeting) {
                     Column {
                         Text(
                             meeting.status.lowercase()
-                                .replaceFirstChar { it.titlecase(java.util.Locale("pl")) },
+                                .replaceFirstChar { it.titlecase(Locale("pl")) },
                             color = BrandBlue,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            meeting.teacherName,
+                            meeting.teacherId,
                             color = DarkText,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
