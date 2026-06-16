@@ -2,6 +2,7 @@ package com.crw.myteacher.data.model
 
 import com.crw.myteacher.data.remote.dto.MeetingDto
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -12,6 +13,7 @@ enum class LessonActionType {
 data class CalendarMeeting(
     val id: Long,
     val title: String,
+    val date: LocalDate,
     val timeRange: String,
     val durationMin: Int,
     val teacherId: String,
@@ -21,8 +23,12 @@ data class CalendarMeeting(
 
 fun MeetingDto.toCalendarMeeting(): CalendarMeeting {
     val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-    val start = try { LocalDateTime.parse(startTime, formatter) } catch (_: Exception) { null }
-    val end = try { LocalDateTime.parse(endTime, formatter) } catch (_: Exception) { null }
+    val start = runCatching { LocalDateTime.parse(startTime, formatter) }.getOrNull()
+    val end = runCatching { LocalDateTime.parse(endTime, formatter) }.getOrNull()
+
+    val resolvedDate = start?.toLocalDate()
+        ?: runCatching { LocalDate.parse(date) }.getOrNull()
+        ?: LocalDate.now()
 
     val timeRange = if (start != null && end != null) {
         val tf = DateTimeFormatter.ofPattern("HH:mm")
@@ -46,6 +52,7 @@ fun MeetingDto.toCalendarMeeting(): CalendarMeeting {
     return CalendarMeeting(
         id = meetingId,
         title = topic,
+        date = resolvedDate,
         timeRange = timeRange,
         durationMin = durationMin,
         teacherId = owner.accountId,

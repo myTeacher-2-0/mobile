@@ -34,4 +34,3 @@ class ApiException(
     val code: Int,
     override val message: String
 ) : Exception("HTTP $code: $message")
-

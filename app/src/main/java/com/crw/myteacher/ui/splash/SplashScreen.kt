@@ -115,7 +115,6 @@ fun SplashScreen(
     )
 
     LaunchedEffect(Unit) {
-        // Rozpocznij walidację sesji równolegle z animacją
         onAnimationReady()
 
         coroutineScope {

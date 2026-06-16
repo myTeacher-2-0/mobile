@@ -11,19 +11,3 @@ data class UserDto(
     val profilePictureUrl: String? = null,
     val phoneNumber: String? = null
 )
-
-@Serializable
-data class UpdateAccountRequestDto(
-    val firstName: String? = null,
-    val lastName: String? = null,
-    val phoneNumber: String? = null,
-    val bio: String? = null,
-    val avatarUrl: String? = null
-)
-
-@Serializable
-data class ChangePasswordRequestDto(
-    val currentPassword: String,
-    val newPassword: String
-)
-

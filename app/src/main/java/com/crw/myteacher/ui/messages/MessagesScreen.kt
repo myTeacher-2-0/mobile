@@ -320,14 +320,9 @@ private fun generateAvatarColor(id: String): Color {
 
 private fun formatTimestamp(timestamp: String?): String {
     if (timestamp == null) return ""
-    // Show time portion if available, otherwise show raw
     return try {
         val parts = timestamp.split("T")
-        if (parts.size >= 2) {
-            parts[1].take(5) // HH:mm
-        } else {
-            timestamp
-        }
+        if (parts.size >= 2) parts[1].take(5) else timestamp
     } catch (_: Exception) {
         timestamp
     }

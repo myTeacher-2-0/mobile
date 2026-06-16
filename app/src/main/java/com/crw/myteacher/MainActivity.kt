@@ -3,7 +3,6 @@ package com.crw.myteacher
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,7 +38,6 @@ import com.crw.myteacher.ui.splash.SplashViewModel
 import com.crw.myteacher.ui.theme.MyTeacherTheme
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 object Splash
 
@@ -61,18 +59,13 @@ object Messages
 @Serializable
 data class Conversation(val chatRoomId: String)
 
-@Serializable
-object ChatList
-
 class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels { HomeViewModel.factory() }
     private val splashViewModel: SplashViewModel by viewModels { SplashViewModel.factory() }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        Log.d("MainActivity", "POST_NOTIFICATIONS permission granted: $granted")
-    }
+    ) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,13 +73,11 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
         enableEdgeToEdge()
         setContent {
-            MyTeacherTheme(dynamicColor = false) {
+            MyTeacherTheme {
                 val navController = rememberNavController()
 
-                // Nasłuchuj na wygaśnięcie sesji — przekieruj na Login
                 LaunchedEffect(Unit) {
                     SessionManager.sessionExpired.collect {
-                        Log.w("MainActivity", "⚠ Received sessionExpired event → showing toast + navigating to Login")
                         Toast.makeText(
                             this@MainActivity,
                             "Sesja wygasła. Zaloguj się ponownie.",
@@ -107,15 +98,10 @@ class MainActivity : ComponentActivity() {
                         var hasNavigated by rememberSaveable { mutableStateOf(false) }
 
                         SplashScreen(
-                            onSplashFinished = {
-                                // Nawigacja nastąpi po zakończeniu walidacji
-                            },
-                            onAnimationReady = {
-                                splashViewModel.validateSession()
-                            }
+                            onSplashFinished = {},
+                            onAnimationReady = { splashViewModel.validateSession() }
                         )
 
-                        // Gdy walidacja się zakończy — nawiguj (tylko raz)
                         LaunchedEffect(sessionState) {
                             if (hasNavigated) return@LaunchedEffect
                             when (val state = sessionState) {
@@ -133,7 +119,7 @@ class MainActivity : ComponentActivity() {
                                         popUpTo(Splash) { inclusive = true }
                                     }
                                 }
-                                SessionCheckResult.Loading -> { /* czekamy */ }
+                                SessionCheckResult.Loading -> {}
                             }
                         }
                     }
@@ -148,14 +134,10 @@ class MainActivity : ComponentActivity() {
                             onLogin = loginViewModel::login,
                             onLoginSuccess = {
                                 val user = loginState.loggedInUser
-                                Log.d("MainActivity", "onLoginSuccess: user=${user?.firstName}, id=${user?.accountId}")
                                 loginViewModel.resetLoginSuccess()
                                 if (user != null) {
-                                    // Używamy danych usera pobranych podczas logowania
-                                    // — BEZ ponownego zapytania do /api/accounts/me
                                     homeViewModel.loadDashboardWithUser(user)
                                 } else {
-                                    Log.w("MainActivity", "onLoginSuccess: user is NULL, falling back to loadDashboard()")
                                     homeViewModel.loadDashboard()
                                 }
                                 PushNotificationService.start(this@MainActivity)
@@ -194,22 +176,9 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(Messages) { launchSingleTop = true }
                             },
                             onPreviousMonth = calendarViewModel::previousMonth,
-                            onNextMonth = calendarViewModel::nextMonth,
-                            onNavigateToChat = { navController.navigate(ChatList) }
+                            onNextMonth = calendarViewModel::nextMonth
                         )
                     }
-//                    composable<ChatList> {
-//                        val chatListViewModel: ChatListViewModel by viewModels { ChatListViewModel.factory() }
-//                        val chatListState by chatListViewModel.uiState.collectAsStateWithLifecycle()
-//                        ChatListRoute(
-//                            uiState = chatListState,
-//                            onNavigateBack = { navController.popBackStack() },
-//                            onChatRoomClick = { chatRoomId ->
-//                                // TODO: nawigacja do widoku konwersacji
-//                            },
-//                            onRetry = chatListViewModel::loadChatRooms
-//                        )
-//                    }
                     composable<Profile> {
                         val profileViewModel: ProfileViewModel by viewModels { ProfileViewModel.factory() }
                         val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
@@ -259,7 +228,6 @@ class MainActivity : ComponentActivity() {
                     composable<Conversation> { backStackEntry ->
                         val conversation = backStackEntry.toRoute<Conversation>()
 
-                        // Wycisz powiadomienia gdy czat jest otwarty
                         androidx.compose.runtime.DisposableEffect(conversation.chatRoomId) {
                             PushNotificationService.activeChatRoomId = conversation.chatRoomId
                             onDispose {

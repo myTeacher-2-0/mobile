@@ -1,6 +1,5 @@
 package com.crw.myteacher.ui.splash
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -32,33 +31,24 @@ class SplashViewModel(
     private var hasValidated = false
 
     fun validateSession() {
-        // Zapobiega wielokrotnym wywołaniom przy recompozycji
-        if (hasValidated) {
-            Log.d(TAG, "validateSession() SKIPPED — already validated")
-            return
-        }
+        if (hasValidated) return
         hasValidated = true
 
         if (!tokenManager.isLoggedIn) {
-            Log.d(TAG, "validateSession() — no token found, marking Unauthenticated")
             _sessionState.value = SessionCheckResult.Unauthenticated
             return
         }
 
-        Log.d(TAG, "validateSession() — token exists, calling /api/accounts/me...")
         viewModelScope.launch {
             SessionManager.suppressExpiredEvent = true
             try {
                 accountRepository.getCurrentUser()
                     .onSuccess { user ->
-                        Log.d(TAG, "validateSession() — SUCCESS: user=${user.firstName} (id=${user.accountId})")
                         _sessionState.value = SessionCheckResult.Authenticated(user)
                     }
                     .onFailure { e ->
-                        Log.e(TAG, "validateSession() — FAILED: code=${(e as? ApiException)?.code}, msg=${e.message}")
                         if (e is ApiException && (e.code == 401 || e.code == 403)) {
                             tokenManager.clear()
-                            Log.d(TAG, "validateSession() — token cleared")
                         }
                         _sessionState.value = SessionCheckResult.Unauthenticated
                     }
@@ -69,7 +59,6 @@ class SplashViewModel(
     }
 
     companion object {
-        private const val TAG = "SplashViewModel"
         fun factory(): ViewModelProvider.Factory {
             return object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")

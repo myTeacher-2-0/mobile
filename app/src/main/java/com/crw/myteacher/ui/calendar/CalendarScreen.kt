@@ -51,6 +51,7 @@ import com.crw.myteacher.ui.theme.ScreenBackground
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 fun Int.lessonCountLabel(): String = when (this) {
@@ -65,10 +66,9 @@ fun CalendarRoute(
     onDateSelected: (LocalDate) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToMessages: () -> Unit = {},
-    onPreviousMonth: () -> Unit = {},
-    onNextMonth: () -> Unit = {},
-    onNavigateToChat: () -> Unit = {}
+    onNavigateToMessages: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit
 ) {
     CalendarScreenContent(
         uiState = uiState,
@@ -77,8 +77,7 @@ fun CalendarRoute(
         onNavigateToProfile = onNavigateToProfile,
         onNavigateToMessages = onNavigateToMessages,
         onPreviousMonth = onPreviousMonth,
-        onNextMonth = onNextMonth,
-        onNavigateToChat = onNavigateToChat
+        onNextMonth = onNextMonth
     )
 }
 
@@ -88,10 +87,9 @@ fun CalendarScreenContent(
     onDateSelected: (LocalDate) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToMessages: () -> Unit = {},
+    onNavigateToMessages: () -> Unit,
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit,
-    onNavigateToChat: () -> Unit = {}
+    onNextMonth: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -117,6 +115,8 @@ fun CalendarScreenContent(
             return@Scaffold
         }
 
+        val meetingsForDay = uiState.meetingsForSelectedDate
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -134,7 +134,6 @@ fun CalendarScreenContent(
                 )
             }
 
-            // Error message
             if (uiState.errorMessage != null) {
                 item {
                     Text(
@@ -147,11 +146,11 @@ fun CalendarScreenContent(
                 }
             }
 
-            // Calendar grid
             item {
                 CalendarGrid(
                     currentMonth = uiState.currentMonth,
                     selectedDate = uiState.selectedDate,
+                    datesWithMeetings = uiState.datesWithMeetings,
                     onDateSelected = onDateSelected,
                     onPreviousMonth = onPreviousMonth,
                     onNextMonth = onNextMonth
@@ -164,13 +163,13 @@ fun CalendarScreenContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    Text("Lekcje", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(formatSelectedDateLabel(uiState.selectedDate), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = BrandBlue.copy(alpha = 0.15f))
                     ) {
                         Text(
-                            text = uiState.meetings.size.lessonCountLabel(),
+                            text = meetingsForDay.size.lessonCountLabel(),
                             color = BrandBlue,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
@@ -181,9 +180,9 @@ fun CalendarScreenContent(
             }
 
             item {
-                if (uiState.meetings.isEmpty()) {
+                if (meetingsForDay.isEmpty()) {
                     Text(
-                        text = "Brak spotkań",
+                        text = "Brak zajęć w tym dniu",
                         color = MutedText,
                         fontSize = 16.sp,
                         modifier = Modifier
@@ -193,7 +192,7 @@ fun CalendarScreenContent(
                     )
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        uiState.meetings.forEach { meeting ->
+                        meetingsForDay.forEach { meeting ->
                             MeetingCard(meeting)
                         }
                     }
@@ -208,12 +207,12 @@ fun CalendarScreenContent(
 fun CalendarGrid(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
+    datesWithMeetings: Set<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // Month header with navigation
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -221,9 +220,7 @@ fun CalendarGrid(
         ) {
             Text(
                 text = currentMonth.let {
-                    val formatter = java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy",
-                        Locale("pl")
-                    )
+                    val formatter = DateTimeFormatter.ofPattern("LLLL yyyy", Locale("pl"))
                     it.format(formatter).replaceFirstChar { c -> c.titlecase(Locale("pl")) }
                 },
                 fontSize = 18.sp,
@@ -248,7 +245,6 @@ fun CalendarGrid(
             }
         }
 
-        // Day of week headers
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("PON", "WT", "ŚR", "CZW", "PT", "SOB", "NDZ").forEach { day ->
                 Text(
@@ -262,10 +258,8 @@ fun CalendarGrid(
             }
         }
 
-        // Calculate days in the grid
         val firstDayOfMonth = currentMonth.atDay(1)
         val daysInMonth = currentMonth.lengthOfMonth()
-        // Monday=1 .. Sunday=7 => offset 0..6
         val startOffset = (firstDayOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value)
         val totalCells = startOffset + daysInMonth
         val weeks = (totalCells + 6) / 7
@@ -280,6 +274,7 @@ fun CalendarGrid(
                     val date = if (isValidDay) currentMonth.atDay(dayNum) else null
                     val isSelected = date == selectedDate
                     val isToday = date == today
+                    val hasMeeting = date != null && datesWithMeetings.contains(date)
 
                     val bgColor = when {
                         isSelected -> BrandBlue
@@ -290,6 +285,11 @@ fun CalendarGrid(
                         isSelected -> Color.White
                         isToday -> BrandBlue
                         else -> DarkText
+                    }
+                    val dotColor = when {
+                        !hasMeeting -> Color.Transparent
+                        isSelected -> Color.White
+                        else -> BrandBlue
                     }
 
                     Box(
@@ -304,12 +304,23 @@ fun CalendarGrid(
                         contentAlignment = Alignment.Center
                     ) {
                         if (isValidDay) {
-                            Text(
-                                text = dayNum.toString(),
-                                color = textColor,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = dayNum.toString(),
+                                    color = textColor,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .clip(CircleShape)
+                                        .background(dotColor)
+                                )
+                            }
                         }
                     }
                 }
@@ -337,7 +348,6 @@ fun MeetingCard(meeting: CalendarMeeting) {
                 modifier = Modifier.padding(start = 14.dp, end = 18.dp, top = 18.dp, bottom = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Top section (Avatar + Subject + Title)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -367,7 +377,6 @@ fun MeetingCard(meeting: CalendarMeeting) {
                     }
                 }
 
-                // Middle section (Time)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -380,7 +389,6 @@ fun MeetingCard(meeting: CalendarMeeting) {
                     )
                 }
 
-                // Bottom section (Teacher + Action button)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -421,6 +429,19 @@ fun MeetingCard(meeting: CalendarMeeting) {
                     }
                 }
             }
+        }
+    }
+}
+
+private fun formatSelectedDateLabel(date: LocalDate): String {
+    val today = LocalDate.now()
+    return when (date) {
+        today -> "Dzisiaj"
+        today.plusDays(1) -> "Jutro"
+        today.minusDays(1) -> "Wczoraj"
+        else -> {
+            val formatter = DateTimeFormatter.ofPattern("d MMMM", Locale("pl"))
+            date.format(formatter).replaceFirstChar { it.titlecase(Locale("pl")) }
         }
     }
 }

@@ -13,22 +13,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 data class CalendarUiState(
     val isLoading: Boolean = true,
     val selectedDate: LocalDate = LocalDate.now(),
     val currentMonth: YearMonth = YearMonth.now(),
-    val meetings: List<CalendarMeeting> = emptyList(),
+    val allMeetings: List<CalendarMeeting> = emptyList(),
     val errorMessage: String? = null
 ) {
-    val monthLabel: String
-        get() {
-            val formatter = DateTimeFormatter.ofPattern("LLLL yyyy", Locale("pl"))
-            return currentMonth.format(formatter)
-                .replaceFirstChar { it.titlecase(Locale("pl")) }
-        }
+    val meetingsForSelectedDate: List<CalendarMeeting>
+        get() = allMeetings.filter { it.date == selectedDate }
+            .sortedBy { it.timeRange }
+
+    val datesWithMeetings: Set<LocalDate>
+        get() = allMeetings.map { it.date }.toSet()
 }
 
 class CalendarViewModel(
@@ -43,44 +41,34 @@ class CalendarViewModel(
 
     fun selectDate(date: LocalDate) {
         _uiState.value = _uiState.value.copy(selectedDate = date)
-        loadMeetings()
     }
 
     fun previousMonth() {
         val newMonth = _uiState.value.currentMonth.minusMonths(1)
-        _uiState.value = _uiState.value.copy(
-            currentMonth = newMonth,
-            selectedDate = newMonth.atDay(1)
-        )
-        loadMeetings()
+        _uiState.value = _uiState.value.copy(currentMonth = newMonth)
     }
 
     fun nextMonth() {
         val newMonth = _uiState.value.currentMonth.plusMonths(1)
-        _uiState.value = _uiState.value.copy(
-            currentMonth = newMonth,
-            selectedDate = newMonth.atDay(1)
-        )
-        loadMeetings()
+        _uiState.value = _uiState.value.copy(currentMonth = newMonth)
     }
 
     private fun loadMeetings() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            val result = meetingRepository.getMyMeetings()
-            result.onSuccess { dtos ->
-                val meetings = dtos
-                    .map { it.toCalendarMeeting() }
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    meetings = meetings
-                )
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = e.message ?: "Błąd pobierania spotkań."
-                )
-            }
+            meetingRepository.getMyMeetings()
+                .onSuccess { dtos ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        allMeetings = dtos.map { it.toCalendarMeeting() }
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "Błąd pobierania spotkań."
+                    )
+                }
         }
     }
 

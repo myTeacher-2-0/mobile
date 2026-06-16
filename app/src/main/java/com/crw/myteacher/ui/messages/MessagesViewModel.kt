@@ -1,6 +1,5 @@
 package com.crw.myteacher.ui.messages
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -31,18 +30,12 @@ class MessagesViewModel(
 
     fun loadChatRooms() {
         viewModelScope.launch {
-            Log.d(TAG, "loadChatRooms()")
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             chatRepository.getMyChatRooms()
                 .onSuccess { rooms ->
-                    Log.d(TAG, "loadChatRooms() — loaded ${rooms.size} rooms")
-                    _uiState.value = MessagesUiState(
-                        isLoading = false,
-                        chatRooms = rooms
-                    )
+                    _uiState.value = MessagesUiState(isLoading = false, chatRooms = rooms)
                 }
-                .onFailure { e ->
-                    Log.e(TAG, "loadChatRooms() — FAILED: ${e.message}", e)
+                .onFailure {
                     _uiState.value = MessagesUiState(
                         isLoading = false,
                         errorMessage = "Nie udało się pobrać wiadomości."
@@ -52,8 +45,6 @@ class MessagesViewModel(
     }
 
     companion object {
-        private const val TAG = "MessagesViewModel"
-
         fun factory(): ViewModelProvider.Factory {
             return object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -68,4 +59,3 @@ class MessagesViewModel(
         }
     }
 }
-

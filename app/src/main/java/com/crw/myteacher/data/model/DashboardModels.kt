@@ -6,15 +6,8 @@ data class DashboardData(
     val progressPercent: Int,
     val completedLabel: String,
     val remainingMeetingsLabel: String,
-    val quickActions: List<QuickAction>,
     val todaysLessons: List<Lesson>,
     val subjects: List<Subject>
-)
-
-data class QuickAction(
-    val id: String,
-    val title: String,
-    val iconText: String
 )
 
 data class Lesson(
@@ -24,8 +17,7 @@ data class Lesson(
     val teacherTitle: String,
     val teacherName: String,
     val status: LessonStatus,
-    val actionLabel: String,
-    val isPrimary: Boolean
+    val actionLabel: String
 )
 
 enum class LessonStatus {
@@ -38,4 +30,3 @@ data class Subject(
     val name: String,
     val isSelected: Boolean
 )
-

@@ -13,4 +13,3 @@ class AccountRepository(private val api: MyTeacherApi) : BaseRepository() {
         return safeApiCall { api.getUserById(userId) }
     }
 }
-

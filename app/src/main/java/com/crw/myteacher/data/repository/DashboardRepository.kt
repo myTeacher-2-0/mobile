@@ -7,4 +7,3 @@ interface DashboardRepository {
     suspend fun getDashboard(): DashboardData
     suspend fun getDashboardForUser(user: UserDto): DashboardData
 }
-

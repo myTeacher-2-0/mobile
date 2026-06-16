@@ -14,4 +14,3 @@ class AuthRepository(private val api: MyTeacherApi) : BaseRepository() {
         return login(LoginRequestDto(email = email, password = password), recaptchaToken)
     }
 }
-

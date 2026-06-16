@@ -332,11 +332,7 @@ private fun ConversationInputBar(onSendMessage: (String) -> Unit, isSending: Boo
 private fun formatMessageTime(timestamp: String): String {
     return try {
         val parts = timestamp.split("T")
-        if (parts.size >= 2) {
-            parts[1].take(5) // HH:mm
-        } else {
-            timestamp
-        }
+        if (parts.size >= 2) parts[1].take(5) else timestamp
     } catch (_: Exception) {
         timestamp
     }

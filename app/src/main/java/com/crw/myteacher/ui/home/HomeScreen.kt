@@ -39,7 +39,6 @@ import com.crw.myteacher.data.model.DashboardData
 import com.crw.myteacher.data.model.Lesson
 import com.crw.myteacher.data.model.LessonStatus
 import com.crw.myteacher.data.model.Subject
-
 import com.crw.myteacher.ui.components.AppBottomBar
 import com.crw.myteacher.ui.components.BottomTab
 
@@ -55,7 +54,7 @@ fun HomeRoute(
     onRetry: () -> Unit,
     onNavigateToCalendar: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToMessages: () -> Unit = {}
+    onNavigateToMessages: () -> Unit
 ) {
     HomeScreen(
         uiState = uiState,

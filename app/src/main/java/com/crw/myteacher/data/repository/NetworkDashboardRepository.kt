@@ -3,7 +3,6 @@ package com.crw.myteacher.data.repository
 import com.crw.myteacher.data.model.DashboardData
 import com.crw.myteacher.data.model.Lesson
 import com.crw.myteacher.data.model.LessonStatus
-import com.crw.myteacher.data.model.QuickAction
 import com.crw.myteacher.data.remote.dto.MeetingDto
 import com.crw.myteacher.data.remote.dto.UserDto
 import java.time.LocalDate
@@ -35,7 +34,7 @@ class NetworkDashboardRepository(
             if (s.isNotEmpty()) s.replaceFirstChar { it.uppercase() } else s
         }
 
-        val todayMeetings: List<MeetingDto> = meetings.filter { dto: MeetingDto ->
+        val todayMeetings: List<MeetingDto> = meetings.filter { dto ->
             if (dto.startTime.isBlank()) return@filter false
             try {
                 val start = LocalDateTime.parse(dto.startTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -52,7 +51,7 @@ class NetworkDashboardRepository(
         val progressPercent = if (totalCount > 0) (completedCount * 100) / totalCount else 0
         val remainingCount = totalCount - completedCount
 
-        val todaysLessons = todayMeetings.map { dto: MeetingDto ->
+        val todaysLessons = todayMeetings.map { dto ->
             val timeRange = try {
                 val start = LocalDateTime.parse(dto.startTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                 val end = LocalDateTime.parse(dto.endTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -72,16 +71,9 @@ class NetworkDashboardRepository(
                 teacherTitle = "Nauczyciel",
                 teacherName = accountRepository.getUserById(dto.owner.accountId).getOrNull()?.firstName ?: "Nauczyciel",
                 status = if (isJoinable) LessonStatus.JOINABLE else LessonStatus.UPCOMING,
-                actionLabel = if (isJoinable) "DOŁĄCZ" else "SZCZEGÓŁY",
-                isPrimary = isJoinable
+                actionLabel = if (isJoinable) "DOŁĄCZ" else "SZCZEGÓŁY"
             )
         }
-
-        val quickActions = listOf(
-            QuickAction(id = "propose", title = "Umów lekcję", iconText = "📚"),
-            QuickAction(id = "calendar", title = "Kalendarz", iconText = "📅"),
-            QuickAction(id = "messages", title = "Wiadomości", iconText = "💬")
-        )
 
         return DashboardData(
             dateLabel = dateLabel,
@@ -89,7 +81,6 @@ class NetworkDashboardRepository(
             progressPercent = progressPercent,
             completedLabel = "$completedCount ukończonych",
             remainingMeetingsLabel = "$remainingCount pozostałych",
-            quickActions = quickActions,
             todaysLessons = todaysLessons,
             subjects = emptyList()
         )
