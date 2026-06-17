@@ -25,7 +25,6 @@ data class HomeUiState(
         progressPercent = 0,
         completedLabel = "",
         remainingMeetingsLabel = "",
-        quickActions = emptyList(),
         todaysLessons = emptyList(),
         subjects = emptyList()
     ),
@@ -63,12 +62,6 @@ class HomeViewModel(
         }
     }
 
-    /**
-     * Ładuje dashboard wykorzystując już pobrane dane użytkownika (z walidacji sesji lub logowania).
-     * Dzięki temu nie odpytujemy ponownie /api/accounts/me.
-     * suppressExpiredEvent = true — bo właśnie zweryfikowaliśmy sesję, więc ewentualny 403
-     * z meetings/me to problem z uprawnieniami, NIE wygaśnięcie sesji.
-     */
     fun loadDashboardWithUser(user: UserDto) {
         if (isLoadingInProgress) {
             Log.d(TAG, "loadDashboardWithUser() SKIPPED — already loading")
@@ -105,7 +98,6 @@ class HomeViewModel(
             progressPercent = 0,
             completedLabel = "",
             remainingMeetingsLabel = "",
-            quickActions = emptyList(),
             todaysLessons = emptyList(),
             subjects = emptyList()
         )

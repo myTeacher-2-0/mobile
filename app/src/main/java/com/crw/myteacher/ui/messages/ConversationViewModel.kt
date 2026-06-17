@@ -32,7 +32,6 @@ class ConversationViewModel(
     private val _uiState = MutableStateFlow(ConversationUiState())
     val uiState: StateFlow<ConversationUiState> = _uiState.asStateFlow()
 
-    /** Signals when WebSocket connection is ready for sending. */
     private val connectionReady = CompletableDeferred<Unit>()
 
     init {
@@ -64,7 +63,7 @@ class ConversationViewModel(
                     Log.d(TAG, "Loaded ${messages.size} messages")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        messages = messages.reversed() // oldest first
+                        messages = messages.reversed()
                     )
                 }
                 .onFailure { e ->
@@ -93,17 +92,17 @@ class ConversationViewModel(
                             messages = currentMessages + newMessage
                         )
                     }
-                    break // normal end of flow
+                    break
                 } catch (e: Exception) {
                     retries++
                     Log.e(TAG, "WebSocket error (attempt $retries/$maxRetries): ${e.message}", e)
                     if (retries >= maxRetries) {
                         Log.e(TAG, "WebSocket max retries reached, giving up")
                         if (!connectionReady.isCompleted) {
-                            connectionReady.complete(Unit) // unblock senders
+                            connectionReady.complete(Unit)
                         }
                     } else {
-                        delay((2000L * retries).milliseconds) // exponential backoff
+                        delay((2000L * retries).milliseconds)
                     }
                 }
             }
@@ -115,7 +114,6 @@ class ConversationViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSending = true)
             try {
-                // Wait for WebSocket connection to be established
                 connectionReady.await()
                 chatRepository.sendMessage(chatRoomId, content)
             } catch (e: Exception) {

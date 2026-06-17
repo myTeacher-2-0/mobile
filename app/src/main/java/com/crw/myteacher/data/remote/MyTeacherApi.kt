@@ -7,7 +7,6 @@ import com.crw.myteacher.data.remote.dto.ChatMessageResponse
 import com.crw.myteacher.data.remote.dto.ChatRoomDto
 import com.crw.myteacher.data.remote.dto.LoginRequestDto
 import com.crw.myteacher.data.remote.dto.MeetingDto
-import com.crw.myteacher.data.remote.dto.MeetingListResponseDto
 import com.crw.myteacher.data.remote.dto.OfferDto
 import com.crw.myteacher.data.remote.dto.OfferListResponseDto
 import com.crw.myteacher.data.remote.dto.UserDto
@@ -29,15 +28,11 @@ interface MyTeacherApi {
         @Header("X-Client-Platform") clientPlatform: String = "android"
     ): Response<AuthResponseDto>
 
-    // ── Account Management ───────────────────────────────────
-
     @GET("api/accounts/me")
     suspend fun getCurrentUser(): Response<UserDto>
 
     @GET("api/accounts/{id}")
     suspend fun getUserById(@Path("id") userId: String): Response<UserDto>
-
-    // ── Meetings ─────────────────────────────────────────────
 
     @GET("api/meetings/me")
     suspend fun getMyMeetings(): Response<List<MeetingDto>>
@@ -51,11 +46,6 @@ interface MyTeacherApi {
     @GET("api/meetings/{id}")
     suspend fun getMeetingById(@Path("id") meetingId: String): Response<MeetingDto>
 
-    @GET("api/meetings/owner/{ownerId}/future")
-    suspend fun getFutureMeetingsByOwner(@Path("ownerId") ownerId: Long): Response<MeetingListResponseDto>
-
-    // ── Availability Week ────────────────────────────────────
-
     @GET("api/availability/week/me")
     suspend fun getMyAvailabilityWeeks(): Response<List<AvailabilityWeekDto>>
 
@@ -65,8 +55,6 @@ interface MyTeacherApi {
         @Query("weekType") weekType: String? = null
     ): Response<List<AvailabilityWeekDto>>
 
-    // ── Availability Override ────────────────────────────────
-
     @GET("api/availability/override/me")
     suspend fun getMyAvailabilityOverrides(): Response<List<AvailabilityOverrideDto>>
 
@@ -74,8 +62,6 @@ interface MyTeacherApi {
     suspend fun getAvailabilityOverrideByOwner(
         @Path("ownerId") ownerId: Long
     ): Response<List<AvailabilityOverrideDto>>
-
-    // ── Offers ───────────────────────────────────────────────
 
     @GET("api/offers")
     suspend fun getOffers(

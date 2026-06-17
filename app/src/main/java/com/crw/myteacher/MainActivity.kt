@@ -61,8 +61,6 @@ object Messages
 @Serializable
 data class Conversation(val chatRoomId: String)
 
-@Serializable
-object ChatList
 
 class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels { HomeViewModel.factory() }
@@ -195,7 +193,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onPreviousMonth = calendarViewModel::previousMonth,
                             onNextMonth = calendarViewModel::nextMonth,
-                            onNavigateToChat = { navController.navigate(ChatList) }
+//                            onNavigateToChat = { navController.navigate(ChatList) }
                         )
                     }
 //                    composable<ChatList> {

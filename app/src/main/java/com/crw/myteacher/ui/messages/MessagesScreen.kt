@@ -34,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -288,19 +287,7 @@ private fun ConversationRow(room: ChatRoomDto, onClick: () -> Unit) {
                     fontSize = 15.sp,
                     color = DarkText
                 )
-                Text(
-                    formatTimestamp(room.lastMessage?.timestamp),
-                    color = MutedText,
-                    fontSize = 11.sp
-                )
             }
-            Text(
-                room.lastMessage?.content ?: "Brak wiadomości",
-                color = MutedText,
-                fontSize = 13.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
         }
     }
 }
@@ -316,20 +303,5 @@ private fun generateAvatarColor(id: String): Color {
     )
     val index = id.hashCode().let { if (it < 0) -it else it } % colors.size
     return colors[index]
-}
-
-private fun formatTimestamp(timestamp: String?): String {
-    if (timestamp == null) return ""
-    // Show time portion if available, otherwise show raw
-    return try {
-        val parts = timestamp.split("T")
-        if (parts.size >= 2) {
-            parts[1].take(5) // HH:mm
-        } else {
-            timestamp
-        }
-    } catch (_: Exception) {
-        timestamp
-    }
 }
 

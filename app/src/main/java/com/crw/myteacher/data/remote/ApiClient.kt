@@ -42,7 +42,6 @@ object ApiClient {
         }
 
         val client = OkHttpClient.Builder()
-            // App-level interceptor: logs token state BEFORE auth interceptor runs
             .addInterceptor { chain ->
                 val req = chain.request()
                 val currentToken = tokenManager.accessToken
@@ -53,7 +52,6 @@ object ApiClient {
             }
             .addInterceptor(AuthInterceptor(tokenManager))
             .addInterceptor(loggingInterceptor)
-            // Network interceptor: sees the ACTUAL request that goes on the wire
             .addNetworkInterceptor { chain ->
                 val req = chain.request()
                 Log.d(TAG, "┌─ NETWORK ─ ${req.method} ${req.url}")

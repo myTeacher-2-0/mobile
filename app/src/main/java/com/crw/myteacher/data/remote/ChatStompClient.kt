@@ -22,28 +22,16 @@ import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 import java.util.concurrent.TimeUnit
 
-/**
- * Klient STOMP WebSocket do komunikacji z chatem.
- *
- * Backend Spring STOMP:
- * - WebSocket endpoint: /ws
- * - Send destination: /app/chat.sendMessage/{chatRoomId}
- * - Subscribe destination: /topic/chatroom/{chatRoomId}
- * - Auth: Bearer token w STOMP CONNECT header
- */
+
 class ChatStompClient(
     private val tokenManager: TokenManager
 ) {
     companion object {
         private const val TAG = "ChatStompClient"
-
-        // Spring WebSocket endpoint
         private val WS_URL = BuildConfig.API_BASE_URL
             .replace("https://", "wss://api.")
             .replace("http://", "ws://api.")
             .trimEnd('/') + "/ws"
-
-        // STOMP destinations
         private const val SEND_DESTINATION = "/app/chat.sendMessage"
         private const val SUBSCRIBE_DESTINATION = "/topic/room"
     }
@@ -55,7 +43,7 @@ class ChatStompClient(
 
     private val okHttpClient = OkHttpClient.Builder()
         .pingInterval(25, TimeUnit.SECONDS)
-        .readTimeout(0, TimeUnit.MILLISECONDS) // no timeout for WebSocket
+        .readTimeout(0, TimeUnit.MILLISECONDS)
         .build()
 
     private var stompSession: StompSession? = null
@@ -71,10 +59,6 @@ class ChatStompClient(
         ERROR
     }
 
-    /**
-     * Nawiązuje połączenie STOMP WebSocket z serwerem.
-     * Token Bearer jest wysyłany jako STOMP CONNECT header.
-     */
     suspend fun connect() {
         if (_connectionState.value == ConnectionState.CONNECTED) {
             Log.d(TAG, "connect() — already connected")
@@ -111,13 +95,6 @@ class ChatStompClient(
         }
     }
 
-    /**
-     * Subskrybuje wiadomości w danym pokoju czatowym.
-     * Zwraca Flow<ChatMessageResponse> z nowo przychodzącymi wiadomościami.
-     *
-     * @param chatRoomId ID pokoju czatowego
-     * @return Flow emitujący nowe wiadomości w czasie rzeczywistym
-     */
     suspend fun subscribeToChatRoom(chatRoomId: String): Flow<ChatMessageResponse> {
         val session = stompSession
             ?: throw IllegalStateException("Not connected. Call connect() first.")
@@ -131,13 +108,6 @@ class ChatStompClient(
         }
     }
 
-    /**
-     * Wysyła wiadomość do pokoju czatowego.
-     *
-     * @param chatRoomId ID pokoju czatowego
-     * @param content Treść wiadomości
-     * @param attachmentId Opcjonalny ID załącznika
-     */
     suspend fun sendMessage(
         chatRoomId: String,
         content: String,
@@ -158,9 +128,6 @@ class ChatStompClient(
         Log.d(TAG, "sendMessage() — sent successfully")
     }
 
-    /**
-     * Rozłącza sesję STOMP WebSocket.
-     */
     suspend fun disconnect() {
         Log.d(TAG, "disconnect() — disconnecting...")
         try {
@@ -175,12 +142,6 @@ class ChatStompClient(
             Log.d(TAG, "disconnect() — DISCONNECTED")
         }
     }
-
-    /**
-     * Sprawdza czy klient jest połączony.
-     */
-    val isConnected: Boolean
-        get() = _connectionState.value == ConnectionState.CONNECTED
 }
 
 

@@ -1,5 +1,6 @@
 package com.crw.myteacher.ui.calendar
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.crw.myteacher.data.model.CalendarMeeting
+import com.crw.myteacher.data.model.LessonActionType
 import com.crw.myteacher.ui.components.AppBottomBar
 import com.crw.myteacher.ui.components.BottomTab
 import com.crw.myteacher.ui.theme.BrandBlue
@@ -66,8 +70,7 @@ fun CalendarRoute(
     onNavigateToProfile: () -> Unit,
     onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
-    onNextMonth: () -> Unit = {},
-    onNavigateToChat: () -> Unit = {}
+    onNextMonth: () -> Unit = {}
 ) {
     CalendarScreenContent(
         uiState = uiState,
@@ -77,7 +80,6 @@ fun CalendarRoute(
         onNavigateToMessages = onNavigateToMessages,
         onPreviousMonth = onPreviousMonth,
         onNextMonth = onNextMonth,
-        onNavigateToChat = onNavigateToChat
     )
 }
 
@@ -90,7 +92,6 @@ fun CalendarScreenContent(
     onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onNavigateToChat: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
