@@ -305,7 +305,7 @@ private fun ErrorBanner(message: String, onRetry: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(10.dp))
             Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = BrandBlue)) {
-                Text("Ponow")
+                Text("Ponów")
             }
         }
     }

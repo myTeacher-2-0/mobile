@@ -16,8 +16,6 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
         val url = originalRequest.url
         val path = url.encodedPath
         val method = originalRequest.method
-
-        // Nie dodawaj tokena do endpointów logowania
         val isAuthEndpoint = AUTH_PATHS.any { path.endsWith(it) }
 
         val token = tokenManager.accessToken
@@ -34,7 +32,6 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
             originalRequest
         }
 
-        // Log full request headers
         Log.d(TAG, "── REQUEST HEADERS for $method $path ──")
         request.headers.forEach { (name, value) ->
             val logValue = if (name.equals("Authorization", ignoreCase = true)) {
@@ -48,7 +45,6 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
         val response = chain.proceed(request)
         val code = response.code
 
-        // Log full response details
         Log.d(TAG, "── RESPONSE for $method $path ──")
         Log.d(TAG, "← $method $url → HTTP $code")
         Log.d(TAG, "  Protocol: ${response.protocol}")
@@ -61,15 +57,11 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
             Log.d(TAG, "  [H] $name: $value")
         }
 
-        // Jeśli serwer zwrócił 401 lub 403 i nie jest to endpoint auth — sesja wygasła
-        // Reagujemy TYLKO gdy token był wysłany (użytkownik był zalogowany)
-        // NIE czyścimy tokenu gdy suppressExpiredEvent=true (np. walidacja sesji, ładowanie dashboardu)
         if (!isAuthEndpoint && hasToken && (code == 401 || code == 403)) {
             Log.w(TAG, "⚠ 401/403 received for $method $url")
             Log.w(TAG, "⚠ Token used (first 20 chars): ${token.take(20)}")
             Log.w(TAG, "⚠ suppressExpiredEvent=${SessionManager.suppressExpiredEvent}")
 
-            // Peek at response body for error details (without consuming it)
             val peekBody = response.peekBody(1024)
             Log.w(TAG, "⚠ Response body: ${peekBody.string()}")
 

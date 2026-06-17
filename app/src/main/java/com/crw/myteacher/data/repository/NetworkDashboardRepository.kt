@@ -3,7 +3,6 @@ package com.crw.myteacher.data.repository
 import com.crw.myteacher.data.model.DashboardData
 import com.crw.myteacher.data.model.Lesson
 import com.crw.myteacher.data.model.LessonStatus
-import com.crw.myteacher.data.model.QuickAction
 import com.crw.myteacher.data.remote.dto.MeetingDto
 import com.crw.myteacher.data.remote.dto.UserDto
 import java.time.LocalDate
@@ -77,19 +76,12 @@ class NetworkDashboardRepository(
             )
         }
 
-        val quickActions = listOf(
-            QuickAction(id = "propose", title = "Umów lekcję", iconText = "📚"),
-            QuickAction(id = "calendar", title = "Kalendarz", iconText = "📅"),
-            QuickAction(id = "messages", title = "Wiadomości", iconText = "💬")
-        )
-
         return DashboardData(
             dateLabel = dateLabel,
             greetingName = userName,
             progressPercent = progressPercent,
             completedLabel = "$completedCount ukończonych",
             remainingMeetingsLabel = "$remainingCount pozostałych",
-            quickActions = quickActions,
             todaysLessons = todaysLessons,
             subjects = emptyList()
         )

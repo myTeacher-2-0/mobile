@@ -6,15 +6,8 @@ data class DashboardData(
     val progressPercent: Int,
     val completedLabel: String,
     val remainingMeetingsLabel: String,
-    val quickActions: List<QuickAction>,
     val todaysLessons: List<Lesson>,
     val subjects: List<Subject>
-)
-
-data class QuickAction(
-    val id: String,
-    val title: String,
-    val iconText: String
 )
 
 data class Lesson(

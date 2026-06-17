@@ -32,7 +32,6 @@ class SplashViewModel(
     private var hasValidated = false
 
     fun validateSession() {
-        // Zapobiega wielokrotnym wywołaniom przy recompozycji
         if (hasValidated) {
             Log.d(TAG, "validateSession() SKIPPED — already validated")
             return

@@ -1,5 +1,6 @@
 ﻿package com.crw.myteacher.data.remote.dto
 import kotlinx.serialization.Serializable
+
 @Serializable
 data class MeetingDto(
     val meetingId: Long,

@@ -22,4 +22,3 @@ data class OfferListResponseDto(
     val totalElements: Long = 0,
     val totalPages: Int = 0
 )
-

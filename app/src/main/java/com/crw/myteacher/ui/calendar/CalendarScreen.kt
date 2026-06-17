@@ -67,8 +67,7 @@ fun CalendarRoute(
     onNavigateToProfile: () -> Unit,
     onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
-    onNextMonth: () -> Unit = {},
-    onNavigateToChat: () -> Unit = {}
+    onNextMonth: () -> Unit = {}
 ) {
     CalendarScreenContent(
         uiState = uiState,
@@ -78,7 +77,6 @@ fun CalendarRoute(
         onNavigateToMessages = onNavigateToMessages,
         onPreviousMonth = onPreviousMonth,
         onNextMonth = onNextMonth,
-        onNavigateToChat = onNavigateToChat
     )
 }
 
@@ -91,7 +89,6 @@ fun CalendarScreenContent(
     onNavigateToMessages: () -> Unit = {},
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onNavigateToChat: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -134,7 +131,6 @@ fun CalendarScreenContent(
                 )
             }
 
-            // Error message
             if (uiState.errorMessage != null) {
                 item {
                     Text(
@@ -147,7 +143,6 @@ fun CalendarScreenContent(
                 }
             }
 
-            // Calendar grid
             item {
                 CalendarGrid(
                     currentMonth = uiState.currentMonth,
@@ -213,7 +208,6 @@ fun CalendarGrid(
     onNextMonth: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // Month header with navigation
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -248,7 +242,6 @@ fun CalendarGrid(
             }
         }
 
-        // Day of week headers
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("PON", "WT", "ŚR", "CZW", "PT", "SOB", "NDZ").forEach { day ->
                 Text(
@@ -262,10 +255,8 @@ fun CalendarGrid(
             }
         }
 
-        // Calculate days in the grid
         val firstDayOfMonth = currentMonth.atDay(1)
         val daysInMonth = currentMonth.lengthOfMonth()
-        // Monday=1 .. Sunday=7 => offset 0..6
         val startOffset = (firstDayOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value)
         val totalCells = startOffset + daysInMonth
         val weeks = (totalCells + 6) / 7
@@ -337,7 +328,6 @@ fun MeetingCard(meeting: CalendarMeeting) {
                 modifier = Modifier.padding(start = 14.dp, end = 18.dp, top = 18.dp, bottom = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Top section (Avatar + Subject + Title)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -366,8 +356,6 @@ fun MeetingCard(meeting: CalendarMeeting) {
                         )
                     }
                 }
-
-                // Middle section (Time)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -379,8 +367,6 @@ fun MeetingCard(meeting: CalendarMeeting) {
                         color = MutedText
                     )
                 }
-
-                // Bottom section (Teacher + Action button)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,

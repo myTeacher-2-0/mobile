@@ -222,8 +222,6 @@ private fun ChatRoomItem(
             }
 
             Spacer(modifier = Modifier.width(12.dp))
-
-            // Name + last message
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = chatRoom.name,
@@ -246,7 +244,6 @@ private fun ChatRoomItem(
                 }
             }
 
-            // Timestamp
             if (chatRoom.lastMessage != null) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(

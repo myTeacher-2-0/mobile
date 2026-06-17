@@ -333,7 +333,7 @@ private fun formatMessageTime(timestamp: String): String {
     return try {
         val parts = timestamp.split("T")
         if (parts.size >= 2) {
-            parts[1].take(5) // HH:mm
+            parts[1].take(5)
         } else {
             timestamp
         }
