@@ -26,7 +26,6 @@ class PushNotificationService : Service() {
 
     companion object {
         private const val TAG = "PushNotificationService"
-        private const val SERVICE_NOTIFICATION_ID = 9999
         private const val MAX_RECONNECT_DELAY_MS = 60_000L
 
         @Volatile
@@ -34,7 +33,7 @@ class PushNotificationService : Service() {
 
         fun start(context: Context) {
             val intent = Intent(context, PushNotificationService::class.java)
-            ContextCompat.startForegroundService(context, intent)
+            context.startService(intent)
         }
 
         fun stop(context: Context) {
@@ -53,13 +52,6 @@ class PushNotificationService : Service() {
 
         ApiClient.init(this)
         stompClient = ChatStompClient(ApiClient.getTokenManager())
-
-        ServiceCompat.startForeground(
-            this,
-            SERVICE_NOTIFICATION_ID,
-            NotificationHelper.buildServiceNotification(this),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -186,8 +178,4 @@ class PushNotificationService : Service() {
 
     private class ReconnectException : Exception()
 }
-
-
-
-
 

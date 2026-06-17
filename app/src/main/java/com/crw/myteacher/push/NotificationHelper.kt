@@ -13,10 +13,8 @@ import com.crw.myteacher.R
 object NotificationHelper {
 
     const val CHANNEL_ID_MESSAGES = "messages_channel"
-    const val CHANNEL_ID_SERVICE = "service_channel"
 
     private const val CHANNEL_NAME_MESSAGES = "Wiadomości"
-    private const val CHANNEL_NAME_SERVICE = "Serwis wiadomości"
 
     fun createNotificationChannels(context: Context) {
         val notificationManager =
@@ -31,17 +29,7 @@ object NotificationHelper {
             enableVibration(true)
         }
 
-        val serviceChannel = NotificationChannel(
-            CHANNEL_ID_SERVICE,
-            CHANNEL_NAME_SERVICE,
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Utrzymywanie połączenia z serwerem wiadomości"
-            setShowBadge(false)
-        }
-
         notificationManager.createNotificationChannel(messagesChannel)
-        notificationManager.createNotificationChannel(serviceChannel)
     }
 
     fun showMessageNotification(
@@ -76,25 +64,6 @@ object NotificationHelper {
             .build()
 
         notificationManager.notify(chatRoomId.hashCode(), notification)
-    }
-
-    fun buildServiceNotification(context: Context): android.app.Notification {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            context, 0, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        return NotificationCompat.Builder(context, CHANNEL_ID_SERVICE)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("MyTeacher")
-            .setContentText("Zostańmy w kontakcie!")
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setContentIntent(pendingIntent)
-            .build()
     }
 
     const val EXTRA_CHAT_ROOM_ID = "extra_chat_room_id"
