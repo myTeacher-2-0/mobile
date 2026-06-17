@@ -15,10 +15,11 @@ data class CalendarMeeting(
     val teacherId: String,
     val status: String,
     val actionType: LessonActionType,
-    val date: java.time.LocalDate
+    val date: java.time.LocalDate,
+    val subjectName: String? = null
 )
 
-fun MeetingDto.toCalendarMeeting(): CalendarMeeting {
+fun MeetingDto.toCalendarMeeting(subjectName: String? = null): CalendarMeeting {
     val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     val start = try { LocalDateTime.parse(startTime, formatter) } catch (_: Exception) { null }
     val end = try { LocalDateTime.parse(endTime, formatter) } catch (_: Exception) { null }
@@ -49,6 +50,7 @@ fun MeetingDto.toCalendarMeeting(): CalendarMeeting {
         teacherId = owner.accountId,
         status = status,
         actionType = actionType,
-        date = lessonDate
+        date = lessonDate,
+        subjectName = subjectName
     )
 }

@@ -7,10 +7,15 @@ import com.crw.myteacher.data.model.CalendarMeeting
 import com.crw.myteacher.data.model.toCalendarMeeting
 import com.crw.myteacher.data.remote.ApiClient
 import com.crw.myteacher.data.repository.MeetingRepository
+import com.crw.myteacher.data.repository.OfferRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -34,7 +39,8 @@ data class CalendarUiState(
 }
 
 class CalendarViewModel(
-    private val meetingRepository: MeetingRepository
+    private val meetingRepository: MeetingRepository,
+    private val offerRepository: OfferRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
@@ -71,7 +77,16 @@ class CalendarViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             val result = meetingRepository.getMyMeetings()
             result.onSuccess { dtos ->
-                val calendarMeetings = dtos.map { it.toCalendarMeeting() }
+                val calendarMeetings = coroutineScope {
+                    dtos.map { dto ->
+                        async {
+                            val offerId = dto.context.offerId
+                            val subjectName = offerRepository.getOfferById(offerId)
+                                .getOrNull()?.subject
+                            dto.toCalendarMeeting(subjectName = subjectName)
+                        }
+                    }.awaitAll()
+                }
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     allMeetings = calendarMeetings
@@ -90,8 +105,9 @@ class CalendarViewModel(
             return object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    val repository = MeetingRepository(ApiClient.api)
-                    return CalendarViewModel(repository) as T
+                    val meetingRepository = MeetingRepository(ApiClient.api)
+                    val offerRepository = OfferRepository(ApiClient.api)
+                    return CalendarViewModel(meetingRepository, offerRepository) as T
                 }
             }
         }

@@ -4,16 +4,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class OfferDto(
-    val id: Long,
-    val teacherId: Long? = null,
-    val teacherName: String? = null,
-    val teacherDescription: String? = null,
-    val teacherRating: Float? = null,
-    val teacherLessonsCount: Int? = null,
-    val subjectName: String? = null,
-    val pricePerLesson: Double = 0.0,
-    val durationMinutes: Int = 60,
-    val currency: String = "PLN"
+    val offerId: String? = null,
+    val ownerId: String? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val priceValue: String? = null,
+    val priceCurrency: String? = null,
+    val subject: String? = null,
+    val levels: List<String> = emptyList(),
+    val experienceDateFrom: String? = null,
+    val ratingScore: Float? = null
 )
 
 @Serializable
@@ -22,4 +22,3 @@ data class OfferListResponseDto(
     val totalElements: Long = 0,
     val totalPages: Int = 0
 )
-

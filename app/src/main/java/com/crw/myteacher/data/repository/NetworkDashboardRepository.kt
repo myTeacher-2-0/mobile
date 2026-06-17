@@ -66,7 +66,7 @@ class NetworkDashboardRepository(
                     || dto.status.equals("IN_PROGRESS", ignoreCase = true)
 
             Lesson(
-                id = dto.meetingId.toString(),
+                id = dto.meetingId,
                 subjectLabel = "Pobrać przedmiot",
                 timeRange = timeRange,
                 teacherTitle = "Nauczyciel",

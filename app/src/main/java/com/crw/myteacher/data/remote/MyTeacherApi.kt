@@ -84,7 +84,7 @@ interface MyTeacherApi {
     ): Response<OfferListResponseDto>
 
     @GET("api/offers/{id}")
-    suspend fun getOfferById(@Path("id") offerId: Long): Response<OfferDto>
+    suspend fun getOfferById(@Path("id") offerId: String): Response<OfferDto>
 
     @GET("api/chat-rooms/me")
     suspend fun getMyChatRooms(

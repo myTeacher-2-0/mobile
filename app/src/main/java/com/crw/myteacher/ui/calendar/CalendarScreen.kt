@@ -359,7 +359,7 @@ fun MeetingCard(meeting: CalendarMeeting) {
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Lekcja",
+                        text = meeting.subjectName ?: "Lekcja",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = BrandBlue

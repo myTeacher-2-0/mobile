@@ -20,7 +20,7 @@ class OfferRepository(private val api: MyTeacherApi) : BaseRepository() {
         return getOffers(page, size).map { it.content }
     }
 
-    suspend fun getOfferById(offerId: Long): Result<OfferDto> {
+    suspend fun getOfferById(offerId: String): Result<OfferDto> {
         return safeApiCall { api.getOfferById(offerId) }
     }
 }
