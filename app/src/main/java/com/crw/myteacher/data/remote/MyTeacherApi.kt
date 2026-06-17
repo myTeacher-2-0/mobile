@@ -7,7 +7,6 @@ import com.crw.myteacher.data.remote.dto.ChatMessageResponse
 import com.crw.myteacher.data.remote.dto.ChatRoomDto
 import com.crw.myteacher.data.remote.dto.LoginRequestDto
 import com.crw.myteacher.data.remote.dto.MeetingDto
-import com.crw.myteacher.data.remote.dto.MeetingListResponseDto
 import com.crw.myteacher.data.remote.dto.OfferDto
 import com.crw.myteacher.data.remote.dto.OfferListResponseDto
 import com.crw.myteacher.data.remote.dto.UserDto
@@ -46,9 +45,6 @@ interface MyTeacherApi {
 
     @GET("api/meetings/{id}")
     suspend fun getMeetingById(@Path("id") meetingId: Long): Response<MeetingDto>
-
-    @GET("api/meetings/owner/{ownerId}/future")
-    suspend fun getFutureMeetingsByOwner(@Path("ownerId") ownerId: Long): Response<MeetingListResponseDto>
 
     @GET("api/availability/week/me")
     suspend fun getMyAvailabilityWeeks(): Response<List<AvailabilityWeekDto>>

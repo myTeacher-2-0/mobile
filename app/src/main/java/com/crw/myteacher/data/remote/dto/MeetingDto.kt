@@ -10,9 +10,15 @@ data class MeetingDto(
     val endTime: String,
     val status: String,
     val owner: MeetingMemberResponse,
+    val context: MeetingContextDto,
     val members: List<MeetingMemberResponse> = emptyList(),
 )
 
+@Serializable
+data class MeetingContextDto (
+    val offerId: String,
+    val reservationId: String
+)
 @Serializable
 data class MeetingMemberResponse(val accountId: String, val status: String)
 @Serializable
