@@ -10,15 +10,15 @@ class MeetingRepository(private val api: MyTeacherApi) : BaseRepository() {
         return safeApiCall { api.getMyMeetings() }
     }
 
-    suspend fun confirmMeeting(meetingId: Long): Result<MeetingDto> {
+    suspend fun confirmMeeting(meetingId: String): Result<MeetingDto> {
         return safeApiCall { api.confirmMeeting(meetingId) }
     }
 
-    suspend fun cancelMeeting(meetingId: Long): Result<MeetingDto> {
+    suspend fun cancelMeeting(meetingId: String): Result<MeetingDto> {
         return safeApiCall { api.cancelMeeting(meetingId) }
     }
 
-    suspend fun getMeetingById(meetingId: Long): Result<MeetingDto> {
+    suspend fun getMeetingById(meetingId: String): Result<MeetingDto> {
         return safeApiCall { api.getMeetingById(meetingId) }
     }
 

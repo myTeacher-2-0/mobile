@@ -20,9 +20,11 @@ data class CalendarUiState(
     val isLoading: Boolean = true,
     val selectedDate: LocalDate = LocalDate.now(),
     val currentMonth: YearMonth = YearMonth.now(),
-    val meetings: List<CalendarMeeting> = emptyList(),
+    val allMeetings: List<CalendarMeeting> = emptyList(),
     val errorMessage: String? = null
 ) {
+    val meetingDates: Set<LocalDate> get() = allMeetings.map { it.date }.toSet()
+    val meetings: List<CalendarMeeting> get() = allMeetings.filter { it.date == selectedDate }
     val monthLabel: String
         get() {
             val formatter = DateTimeFormatter.ofPattern("LLLL yyyy", Locale("pl"))
@@ -69,11 +71,10 @@ class CalendarViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             val result = meetingRepository.getMyMeetings()
             result.onSuccess { dtos ->
-                val meetings = dtos
-                    .map { it.toCalendarMeeting() }
+                val calendarMeetings = dtos.map { it.toCalendarMeeting() }
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    meetings = meetings
+                    allMeetings = calendarMeetings
                 )
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(

@@ -43,13 +43,13 @@ interface MyTeacherApi {
     suspend fun getMyMeetings(): Response<List<MeetingDto>>
 
     @PUT("api/meetings/{id}/confirm")
-    suspend fun confirmMeeting(@Path("id") meetingId: Long): Response<MeetingDto>
+    suspend fun confirmMeeting(@Path("id") meetingId: String): Response<MeetingDto>
 
     @PUT("api/meetings/{id}/cancel")
-    suspend fun cancelMeeting(@Path("id") meetingId: Long): Response<MeetingDto>
+    suspend fun cancelMeeting(@Path("id") meetingId: String): Response<MeetingDto>
 
     @GET("api/meetings/{id}")
-    suspend fun getMeetingById(@Path("id") meetingId: Long): Response<MeetingDto>
+    suspend fun getMeetingById(@Path("id") meetingId: String): Response<MeetingDto>
 
     @GET("api/meetings/owner/{ownerId}/future")
     suspend fun getFutureMeetingsByOwner(@Path("ownerId") ownerId: Long): Response<MeetingListResponseDto>

@@ -2,7 +2,7 @@
 import kotlinx.serialization.Serializable
 @Serializable
 data class MeetingDto(
-    val meetingId: Long,
+    val meetingId: String,
     val topic: String,
     val date: String,
     val startTime: String,

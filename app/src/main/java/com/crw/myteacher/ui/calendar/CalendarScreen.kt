@@ -1,30 +1,30 @@
 package com.crw.myteacher.ui.calendar
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,13 +34,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import com.crw.myteacher.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.crw.myteacher.R
 import com.crw.myteacher.data.model.CalendarMeeting
-import com.crw.myteacher.data.model.LessonActionType
 import com.crw.myteacher.ui.components.AppBottomBar
 import com.crw.myteacher.ui.components.BottomTab
 import com.crw.myteacher.ui.theme.BrandBlue
@@ -134,7 +133,6 @@ fun CalendarScreenContent(
                 )
             }
 
-            // Error message
             if (uiState.errorMessage != null) {
                 item {
                     Text(
@@ -147,11 +145,11 @@ fun CalendarScreenContent(
                 }
             }
 
-            // Calendar grid
             item {
                 CalendarGrid(
                     currentMonth = uiState.currentMonth,
                     selectedDate = uiState.selectedDate,
+                    meetingDates = uiState.meetingDates,
                     onDateSelected = onDateSelected,
                     onPreviousMonth = onPreviousMonth,
                     onNextMonth = onNextMonth
@@ -183,7 +181,7 @@ fun CalendarScreenContent(
             item {
                 if (uiState.meetings.isEmpty()) {
                     Text(
-                        text = "Brak spotkań",
+                        text = "Brak lekcji w tym dniu",
                         color = MutedText,
                         fontSize = 16.sp,
                         modifier = Modifier
@@ -208,12 +206,12 @@ fun CalendarScreenContent(
 fun CalendarGrid(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
+    meetingDates: Set<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // Month header with navigation
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -221,9 +219,7 @@ fun CalendarGrid(
         ) {
             Text(
                 text = currentMonth.let {
-                    val formatter = java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy",
-                        Locale("pl")
-                    )
+                    val formatter = java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy", Locale("pl"))
                     it.format(formatter).replaceFirstChar { c -> c.titlecase(Locale("pl")) }
                 },
                 fontSize = 18.sp,
@@ -248,7 +244,6 @@ fun CalendarGrid(
             }
         }
 
-        // Day of week headers
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("PON", "WT", "ŚR", "CZW", "PT", "SOB", "NDZ").forEach { day ->
                 Text(
@@ -262,10 +257,8 @@ fun CalendarGrid(
             }
         }
 
-        // Calculate days in the grid
         val firstDayOfMonth = currentMonth.atDay(1)
         val daysInMonth = currentMonth.lengthOfMonth()
-        // Monday=1 .. Sunday=7 => offset 0..6
         val startOffset = (firstDayOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value)
         val totalCells = startOffset + daysInMonth
         val weeks = (totalCells + 6) / 7
@@ -280,6 +273,7 @@ fun CalendarGrid(
                     val date = if (isValidDay) currentMonth.atDay(dayNum) else null
                     val isSelected = date == selectedDate
                     val isToday = date == today
+                    val hasMeeting = date != null && date in meetingDates
 
                     val bgColor = when {
                         isSelected -> BrandBlue
@@ -291,25 +285,38 @@ fun CalendarGrid(
                         isToday -> BrandBlue
                         else -> DarkText
                     }
+                    val dotColor = if (isSelected) Color.White else BrandBlue
 
-                    Box(
+                    Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(4.dp)
-                            .clip(CircleShape)
-                            .background(bgColor)
-                            .clickable(enabled = isValidDay) {
-                                date?.let { onDateSelected(it) }
-                            },
-                        contentAlignment = Alignment.Center
+                            .padding(horizontal = 2.dp, vertical = 2.dp)
+                            .clickable(enabled = isValidDay) { date?.let { onDateSelected(it) } },
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (isValidDay) {
-                            Text(
-                                text = dayNum.toString(),
-                                color = textColor,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(bgColor),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isValidDay) {
+                                Text(
+                                    text = dayNum.toString(),
+                                    color = textColor,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Box(modifier = Modifier.height(8.dp), contentAlignment = Alignment.Center) {
+                            if (hasMeeting) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .background(dotColor, CircleShape)
+                                )
+                            }
                         }
                     }
                 }
@@ -325,98 +332,53 @@ fun MeetingCard(meeting: CalendarMeeting) {
         colors = CardDefaults.cardColors(containerColor = LightCardBg),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)) {
-            Box(modifier = Modifier
-                .width(4.dp)
-                .fillMaxHeight()
-                .background(BrandBlue))
-
-            Column(
-                modifier = Modifier.padding(start = 14.dp, end = 18.dp, top = 18.dp, bottom = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(BrandBlue)
+            )
+            Row(
+                modifier = Modifier
+                    .padding(start = 14.dp, end = 18.dp, top = 14.dp, bottom = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Top section (Avatar + Subject + Title)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_avatar_placeholder),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                    )
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            text = meeting.title.uppercase(),
-                            color = BrandBlue,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            meeting.title,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DarkText
-                        )
-                    }
-                }
-
-                // Middle section (Time)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("🕐", fontSize = 16.sp)
+                Image(
+                    painter = painterResource(id = R.drawable.ic_avatar_placeholder),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "${meeting.timeRange} (${meeting.durationMin} min)",
-                        fontSize = 14.sp,
-                        color = MutedText
+                        text = "Lekcja",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandBlue
                     )
-                }
-
-                // Bottom section (Teacher + Action button)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            meeting.status.lowercase()
-                                .replaceFirstChar { it.titlecase(Locale("pl")) },
-                            color = BrandBlue,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            meeting.teacherId,
-                            color = DarkText,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    val isJoin = meeting.actionType == LessonActionType.JOIN
-                    val btnColor = if (isJoin) BrandBlue else Color.Transparent
-                    val textColor = if (isJoin) Color.White else BrandBlue
-
-                    Button(
-                        onClick = {},
-                        colors = ButtonDefaults.buttonColors(containerColor = btnColor),
-                        border = if (!isJoin) BorderStroke(1.dp, BrandBlue) else null,
-                        shape = RoundedCornerShape(24.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Schedule,
+                            contentDescription = null,
+                            tint = DarkText,
+                            modifier = Modifier.size(15.dp)
+                        )
                         Text(
-                            if (isJoin) "DOŁĄCZ" else "SZCZEGÓŁY",
-                            fontWeight = FontWeight.Bold,
+                            text = meeting.timeRange,
                             fontSize = 14.sp,
-                            color = textColor
+                            color = DarkText,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
