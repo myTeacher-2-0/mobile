@@ -86,8 +86,6 @@ class LoginViewModel(
                                 tokenManager.accessToken = authResponse.accessToken
                                 tokenManager.refreshToken = authResponse.refreshToken
                                 Log.d(TAG, "│ Step 5: Tokens saved to TokenManager")
-
-                                // Pobierz dane usera — JEDYNE zapytanie do account/me
                                 Log.d(TAG, "│ Step 6: Fetching /api/accounts/me (single call)...")
                                 val userResult = accountRepository.getCurrentUser()
                                 userResult
